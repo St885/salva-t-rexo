@@ -1,0 +1,13 @@
+{
+  "name": "salva-t-rexo",
+  "version": "0.1.0",
+  "description": "Match-3 puzzle game featuring T-REXo the dinosaur",
+  "scripts": {
+    "start": "npx serve . -p 3000",
+    "dev": "npx serve . -p 3000"
+  },
+  "keywords": ["game", "match3", "puzzle", "mobile", "dinosaur"],
+  "author": "Stefano",
+  "license": "UNLICENSED",
+  "private": true
+}
