@@ -1,8 +1,10 @@
 export const SCENES = {
-  BOOT:   'boot',
-  MENU:   'menu',
-  LEVEL:  'level',
-  RESULT: 'result',
+  BOOT:          'boot',
+  MENU:          'menu',
+  JURASSIC_BASE: 'jurassic_base',
+  LEVEL_PREP:    'level_prep',
+  LEVEL:         'level',
+  RESULT:        'result',
 };
 
 export const TILE_TYPES = {

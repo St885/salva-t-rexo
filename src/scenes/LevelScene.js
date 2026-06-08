@@ -46,6 +46,7 @@ export class LevelScene {
     else if (GameConfig.debug?.startingBoosters) this._injectStartingBoosters();
     this._injectFossilEggs();
     this._injectDinoCrates();
+    this._injectPendingBoosters();
 
     this.element = document.createElement('div');
     this.element.className = 'scene scene-level';
@@ -1181,6 +1182,41 @@ export class LevelScene {
       const tile = this.board.getTile(col, row);
       if (tile) tile.booster = booster;
     }
+  }
+
+  _injectPendingBoosters() {
+    try {
+      const raw = localStorage.getItem('trexo_pending_boosters');
+      if (!raw) return;
+      const pending = JSON.parse(raw);
+      localStorage.removeItem('trexo_pending_boosters');
+      const MAP = { rocket: 'rocket-h', bomb: 'bomb', colorBomb: 'color-bomb', ptero: 'ptero' };
+      const used = new Set();
+      for (let r = 0; r < this.board.rows; r++)
+        for (let c = 0; c < this.board.cols; c++) {
+          const t = this.board.getTile(c, r);
+          if (t?.obstacle || t?.booster) used.add(`${c},${r}`);
+        }
+      for (const [key, count] of Object.entries(pending)) {
+        const booster = MAP[key];
+        if (!booster || count <= 0) continue;
+        for (let i = 0; i < count; i++) {
+          let placed = false, att = 0;
+          while (!placed && att++ < 300) {
+            const col = Math.floor(Math.random() * this.board.cols);
+            const row = Math.floor(Math.random() * this.board.rows);
+            const k   = `${col},${row}`;
+            if (used.has(k)) continue;
+            const tile = this.board.getTile(col, row);
+            if (tile && !tile.obstacle && !tile.booster) {
+              tile.booster = booster;
+              used.add(k);
+              placed = true;
+            }
+          }
+        }
+      }
+    } catch {}
   }
 
   _wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }

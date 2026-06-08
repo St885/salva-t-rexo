@@ -1,10 +1,12 @@
-import { SceneManager } from './SceneManager.js';
-import { InputManager } from './InputManager.js';
-import { BootScene }   from '../scenes/BootScene.js';
-import { MenuScene }   from '../scenes/MenuScene.js';
-import { LevelScene }  from '../scenes/LevelScene.js';
-import { ResultScene } from '../scenes/ResultScene.js';
-import { SCENES }      from '../utils/constants.js';
+import { SceneManager }          from './SceneManager.js';
+import { InputManager }          from './InputManager.js';
+import { BootScene }             from '../scenes/BootScene.js';
+import { MenuScene }             from '../scenes/MenuScene.js';
+import { JurassicBaseScene }     from '../scenes/JurassicBaseScene.js';
+import { LevelPreparationScene } from '../scenes/LevelPreparationScene.js';
+import { LevelScene }            from '../scenes/LevelScene.js';
+import { ResultScene }           from '../scenes/ResultScene.js';
+import { SCENES }                from '../utils/constants.js';
 
 export class Game {
   constructor() {
@@ -21,11 +23,27 @@ export class Game {
     );
     this.sceneManager.register(
       SCENES.MENU,
-      new MenuScene(this.container, () => this._show(SCENES.LEVEL))
+      new MenuScene(this.container, () => this._show(SCENES.JURASSIC_BASE))
+    );
+    this.sceneManager.register(
+      SCENES.JURASSIC_BASE,
+      new JurassicBaseScene(
+        this.container,
+        () => this._show(SCENES.LEVEL_PREP),
+        () => this._show(SCENES.MENU)
+      )
+    );
+    this.sceneManager.register(
+      SCENES.LEVEL_PREP,
+      new LevelPreparationScene(
+        this.container,
+        () => this._show(SCENES.LEVEL),
+        () => this._show(SCENES.JURASSIC_BASE)
+      )
     );
     this.sceneManager.register(
       SCENES.LEVEL,
-      new LevelScene(this.container, () => this._show(SCENES.MENU))
+      new LevelScene(this.container, () => this._show(SCENES.JURASSIC_BASE))
     );
     this.sceneManager.register(
       SCENES.RESULT,
