@@ -20,6 +20,7 @@ export const GameConfig = {
   },
 
   debug: {
-    startingBoosters: true,
+    startingBoosters:     false,
+    startingBoosterPairs: true,
   },
 };

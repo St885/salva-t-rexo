@@ -9,13 +9,14 @@ const POINTS_PER_TILE = 10;
 const TARGET_SCORE    = 1500;
 const MAX_MOVES       = 30;
 const EGG_COUNT       = 10;
-const SWAP_MS         = 180;
-const POP_MS          = 320;
-const FALL_MS         = 260;
-const SHAKE_MS        = 320;
+const SWAP_MS         = 140;
+const POP_MS          = 220;
+const FALL_MS         = 190;
+const SHAKE_MS        = 240;
 const DRAG_THRESHOLD  = 22;
-const ROCKET_BONUS    = 60;
-const BOMB_BONUS      = 80;
+const ROCKET_BONUS       = 60;
+const BOMB_BONUS         = 80;
+const DOUBLE_BOMB_BONUS  = 220;
 
 export class LevelScene {
   constructor(container, onBack) {
@@ -40,7 +41,8 @@ export class LevelScene {
     this._lowMovesAlert = false;
 
     this.board.init();
-    if (GameConfig.debug?.startingBoosters) this._injectStartingBoosters();
+    if (GameConfig.debug?.startingBoosterPairs) this._injectBoosterPairs();
+    else if (GameConfig.debug?.startingBoosters) this._injectStartingBoosters();
     this._injectFossilEggs();
 
     this.element = document.createElement('div');
@@ -317,10 +319,10 @@ export class LevelScene {
 
     this.trexo?.react('rocket');
     this._getTileEl(col, row)?.classList.add('rocket-launch');
-    await this._wait(200);
+    await this._wait(160);
     if (!this.element) return;
 
-    const STAGGER = 22;
+    const STAGGER = 16;
     for (let i = 0; i < affected.length; i++) {
       const el = this._getTileEl(affected[i].col, affected[i].row);
       if (el) { el.style.setProperty('--sweep-delay', `${i * STAGGER}ms`); el.classList.add('rocket-sweep'); }
@@ -328,7 +330,7 @@ export class LevelScene {
     this.objectives.addScore(affected.length * POINTS_PER_TILE + ROCKET_BONUS);
     this._updateHUD();
     this._bumpScore();
-    await this._wait((affected.length - 1) * STAGGER + 300);
+    await this._wait((affected.length - 1) * STAGGER + 220);
     if (!this.element) return;
 
     for (const p of affected) {
@@ -365,7 +367,7 @@ export class LevelScene {
 
     // Phase 1 — buildup: bomb grows with intensifying glow
     this._getTileEl(col, row)?.classList.add('bomb-launch');
-    await this._wait(300);
+    await this._wait(220);
     if (!this.element) return;
 
     // Phase 2 — detonation: flash + shockwave + board shake
@@ -401,7 +403,7 @@ export class LevelScene {
         const dist = Math.max(Math.abs(dx), Math.abs(dy));
         el.style.setProperty('--ex', `${dx * 24}px`);
         el.style.setProperty('--ey', `${dy * 24}px`);
-        el.style.setProperty('--bomb-delay', `${dist * 38}ms`);
+        el.style.setProperty('--bomb-delay', `${dist * 28}ms`);
         el.classList.add('bomb-explode');
       }
     }
@@ -409,7 +411,7 @@ export class LevelScene {
     this.objectives.addScore(affected.length * POINTS_PER_TILE + BOMB_BONUS);
     this._updateHUD();
     this._bumpScore();
-    await this._wait(460);
+    await this._wait(360);
     if (!this.element) return;
 
     for (const p of affected) {
@@ -435,7 +437,7 @@ export class LevelScene {
 
     this.trexo?.react('ptero');
     this._getTileEl(col, row)?.classList.add('ptero-launch');
-    await this._wait(220);
+    await this._wait(175);
     if (!this.element) return;
 
     // Pick a random normal tile (no booster)
@@ -460,7 +462,7 @@ export class LevelScene {
     this._updateHUD();
     this._bumpScore();
 
-    await this._wait(380);
+    await this._wait(290);
     if (!this.element) return;
 
     for (const p of toRemove) {
@@ -485,7 +487,7 @@ export class LevelScene {
 
     this.trexo?.react('colorBomb');
     this._getTileEl(col, row)?.classList.add('color-bomb-launch');
-    await this._wait(260);
+    await this._wait(200);
     if (!this.element) return;
 
     const targets = [];
@@ -506,7 +508,7 @@ export class LevelScene {
     this._updateHUD();
     this._bumpScore();
 
-    await this._wait((targets.length > 0 ? (targets.length - 1) * STAGGER : 0) + 420);
+    await this._wait((targets.length > 0 ? (targets.length - 1) * STAGGER : 0) + 300);
     if (!this.element) return;
 
     for (const p of targets) {
@@ -538,6 +540,18 @@ export class LevelScene {
 
     const tileA = this.board.getTile(col1, row1);
     const tileB = this.board.getTile(col2, row2);
+
+    // Bomb + Bomb combo → mega 5×5 explosion
+    if (tileA?.booster === 'bomb' && tileB?.booster === 'bomb') {
+      this.objectives.useMove();
+      await this._fireDoubleBomb(col1, row1, col2, row2);
+      await this._runCascade(-1, -1);
+      this._updateHUD();
+      if (!this.element) return;
+      this._checkGameOver();
+      this.busy = false;
+      return;
+    }
 
     // Ptero: any swap activates it
     if (tileA?.booster === 'ptero' || tileB?.booster === 'ptero') {
@@ -849,6 +863,126 @@ export class LevelScene {
         tile.obstacle = 'egg';
         skip.add(key);
         placed++;
+      }
+    }
+  }
+
+  // ── Double-bomb combo ────────────────────────────
+
+  async _fireDoubleBomb(col1, row1, col2, row2) {
+    if (!this.element) return;
+
+    this.trexo?.react('megaBomb');
+
+    // Phase 1: both bombs build up
+    this._getTileEl(col1, row1)?.classList.add('bomb-launch');
+    this._getTileEl(col2, row2)?.classList.add('bomb-launch');
+    await this._wait(260);
+    if (!this.element) return;
+
+    // 5×5 area centered between the two bombs
+    const cCol = Math.round((col1 + col2) / 2);
+    const cRow = Math.round((row1 + row2) / 2);
+    const affected = [];
+    for (let dr = -2; dr <= 2; dr++) {
+      for (let dc = -2; dc <= 2; dc++) {
+        const r = cRow + dr, c = cCol + dc;
+        if (r >= 0 && r < this.board.rows && c >= 0 && c < this.board.cols)
+          affected.push({ col: c, row: r });
+      }
+    }
+
+    // Phase 2: big flash + double shockwave + shake
+    const gridEl = this.element.querySelector('#board-grid');
+    if (gridEl) {
+      const flash = document.createElement('div');
+      flash.className = 'bomb-flash double-bomb-flash';
+      gridEl.appendChild(flash);
+      setTimeout(() => flash.remove(), 340);
+
+      const refEl = this._getTileEl(col1, row1);
+      if (refEl) {
+        const bRect = refEl.getBoundingClientRect();
+        const gRect = gridEl.getBoundingClientRect();
+        const wave  = document.createElement('div');
+        wave.className = 'bomb-shockwave double-bomb-shockwave';
+        wave.style.left = `${bRect.left + bRect.width / 2 - gRect.left}px`;
+        wave.style.top  = `${bRect.top  + bRect.height / 2 - gRect.top}px`;
+        gridEl.appendChild(wave);
+        setTimeout(() => wave.remove(), 950);
+      }
+      gridEl.classList.add('board-shake');
+      setTimeout(() => gridEl.classList.remove('board-shake'), 440);
+    }
+
+    // Phase 3: tiles burst outward with stagger
+    for (const p of affected) {
+      const el = this._getTileEl(p.col, p.row);
+      if (el) {
+        const dx = p.col - cCol, dy = p.row - cRow;
+        const dist = Math.max(Math.abs(dx), Math.abs(dy));
+        el.style.setProperty('--ex', `${dx * 30}px`);
+        el.style.setProperty('--ey', `${dy * 30}px`);
+        el.style.setProperty('--bomb-delay', `${dist * 32}ms`);
+        el.classList.add('bomb-explode');
+      }
+    }
+
+    this.objectives.addScore(affected.length * POINTS_PER_TILE + DOUBLE_BOMB_BONUS);
+    this._updateHUD();
+    this._bumpScore();
+    await this._wait(400);
+    if (!this.element) return;
+
+    for (const p of affected) {
+      const el = this._getTileEl(p.col, p.row);
+      if (el) { el.classList.remove('bomb-explode'); el.classList.add('matched'); }
+    }
+    await this._wait(POP_MS);
+    if (!this.element) return;
+
+    this._processEggBreaks(affected);
+    this.board.removeMatched(affected);
+    this.board.applyGravity();
+    this.board.refill();
+    this._renderBoard();
+    await this._wait(FALL_MS);
+  }
+
+  _injectBoosterPairs() {
+    const pairs = [
+      ['bomb', 'bomb'],
+      ['rocket-h', 'rocket-v'],
+      ['color-bomb', 'color-bomb'],
+      ['ptero', 'ptero'],
+    ];
+    const used = new Set();
+    for (let r = 0; r < this.board.rows; r++) {
+      for (let c = 0; c < this.board.cols; c++) {
+        const t = this.board.getTile(c, r);
+        if (t?.booster || t?.obstacle) used.add(`${c},${r}`);
+      }
+    }
+    const dirs = [[0,1],[1,0],[0,-1],[-1,0]];
+    for (const [b1, b2] of pairs) {
+      let placed = false, attempts = 0;
+      while (!placed && attempts < 300) {
+        attempts++;
+        const col = Math.floor(Math.random() * this.board.cols);
+        const row = Math.floor(Math.random() * this.board.rows);
+        if (used.has(`${col},${row}`)) continue;
+        const [dc, dr] = dirs[Math.floor(Math.random() * dirs.length)];
+        const col2 = col + dc, row2 = row + dr;
+        if (col2 < 0 || col2 >= this.board.cols || row2 < 0 || row2 >= this.board.rows) continue;
+        if (used.has(`${col2},${row2}`)) continue;
+        const t1 = this.board.getTile(col, row);
+        const t2 = this.board.getTile(col2, row2);
+        if (!t1 || !t2) continue;
+        t1.booster = b1;
+        t2.booster = b2;
+        used.add(`${col},${row}`);
+        used.add(`${col2},${row2}`);
+        placed = true;
       }
     }
   }

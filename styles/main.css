@@ -263,8 +263,8 @@ body {
 }
 
 @keyframes egg-shimmer {
-  0%, 100% { filter: brightness(1)    drop-shadow(0 0  4px rgba(220,170,40,0.35)); }
-  50%       { filter: brightness(1.18) drop-shadow(0 0 12px rgba(255,215,70,0.75)); }
+  0%, 100% { filter: brightness(1); }
+  50%       { filter: brightness(1.18); }
 }
 
 @keyframes egg-crack {
@@ -460,36 +460,50 @@ body {
 
 /* Jewel colors — radial gradient gives volume/depth */
 .tile-t0 {
-  background: radial-gradient(ellipse at 35% 25%, #ff90a8 0%, #e02840 48%, #940e1c 100%);
-  box-shadow: 0 5px 0 #6e0810, 0 2px 14px rgba(224, 40, 64, 0.6);
+  background: radial-gradient(ellipse at 32% 22%, #ffb8cc 0%, #f02840 36%, #8a0c1a 80%, #540008 100%);
+  box-shadow: 0 5px 0 #5a0810, 0 3px 16px rgba(224, 40, 64, 0.65), inset 0 1px 0 rgba(255,255,255,0.18);
 }
 .tile-t1 {
-  background: radial-gradient(ellipse at 35% 25%, #ffee80 0%, #f0b818 48%, #9a6e00 100%);
-  box-shadow: 0 5px 0 #7a5400, 0 2px 14px rgba(240, 184, 24, 0.6);
+  background: radial-gradient(ellipse at 32% 22%, #fff0a0 0%, #f4bc14 36%, #8e6000 80%, #5c3c00 100%);
+  box-shadow: 0 5px 0 #6e4a00, 0 3px 16px rgba(244, 188, 20, 0.65), inset 0 1px 0 rgba(255,255,255,0.18);
 }
 .tile-t2 {
-  background: radial-gradient(ellipse at 35% 25%, #88f0bc 0%, #38a870 48%, #16482e 100%);
-  box-shadow: 0 5px 0 #0e3420, 0 2px 14px rgba(56, 168, 112, 0.6);
+  background: radial-gradient(ellipse at 32% 22%, #a0f4cc 0%, #30a868 36%, #124020 80%, #0a2814 100%);
+  box-shadow: 0 5px 0 #0a2e18, 0 3px 16px rgba(48, 168, 104, 0.65), inset 0 1px 0 rgba(255,255,255,0.18);
 }
 .tile-t3 {
-  background: radial-gradient(ellipse at 35% 25%, #88d8ff 0%, #2e8ee8 48%, #0c2e7e 100%);
-  box-shadow: 0 5px 0 #082060, 0 2px 14px rgba(46, 142, 232, 0.6);
+  background: radial-gradient(ellipse at 32% 22%, #a8e4ff 0%, #2890ec 36%, #0a2870 80%, #061848 100%);
+  box-shadow: 0 5px 0 #061c5a, 0 3px 16px rgba(40, 144, 236, 0.65), inset 0 1px 0 rgba(255,255,255,0.18);
 }
 .tile-t4 {
-  background: radial-gradient(ellipse at 35% 25%, #e0a8ff 0%, #8830d8 48%, #400e98 100%);
-  box-shadow: 0 5px 0 #28087a, 0 2px 14px rgba(136, 48, 216, 0.6);
+  background: radial-gradient(ellipse at 32% 22%, #e8b8ff 0%, #8c2ce0 36%, #3a0890 80%, #220060 100%);
+  box-shadow: 0 5px 0 #200868, 0 3px 16px rgba(140, 44, 224, 0.65), inset 0 1px 0 rgba(255,255,255,0.18);
 }
 
-/* Glossy highlight — white oval at top, visible on all tile types */
+/* Bottom-edge reflection */
+.tile::before {
+  content: '';
+  position: absolute;
+  bottom: 7%;
+  left: 14%;
+  right: 14%;
+  height: 15%;
+  border-radius: 50%;
+  background: linear-gradient(0deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Top gloss specular — brighter and tighter */
 .tile::after {
   content: '';
   position: absolute;
   top: 4%;
-  left: 8%;
-  right: 8%;
-  height: 46%;
+  left: 10%;
+  right: 10%;
+  height: 42%;
   border-radius: 50%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.0) 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.08) 55%, rgba(255,255,255,0) 100%);
   pointer-events: none;
 }
 
@@ -514,26 +528,26 @@ body {
 
 /* ── Tile animations ── */
 
-/* Pop: grows slightly then collapses to nothing */
+/* Pop: snappy burst then collapse */
 @keyframes match-pop {
   0%   { transform: scale(1);    opacity: 1; }
-  30%  { transform: scale(1.28); opacity: 1; }
+  20%  { transform: scale(1.22); opacity: 1; }
   100% { transform: scale(0);    opacity: 0; }
 }
 
 .tile.matched {
-  animation: match-pop 0.32s ease forwards;
+  animation: match-pop 0.22s ease forwards;
   pointer-events: none;
 }
 
 /* Fall-in: new tiles drop from above */
 @keyframes fall-in {
-  from { transform: translateY(-28px); opacity: 0; }
+  from { transform: translateY(-24px); opacity: 0; }
   to   { transform: translateY(0);     opacity: 1; }
 }
 
 .tile[data-new] {
-  animation: fall-in 0.26s cubic-bezier(0.2, 0, 0.4, 1.35);
+  animation: fall-in 0.20s cubic-bezier(0.2, 0, 0.4, 1.28);
 }
 
 /* Shake: invalid-move feedback on two tiles */
@@ -772,14 +786,14 @@ body {
 
 /* Bomb buildup — grows and glows before detonation */
 @keyframes bomb-launch-anim {
-  0%   { transform: scale(1);    filter: brightness(1)   drop-shadow(0 0  0px rgba(255,120,0,0));   }
-  25%  { transform: scale(1.25); filter: brightness(1.4) drop-shadow(0 0 10px rgba(255,140,0,0.8)); }
-  60%  { transform: scale(1.6);  filter: brightness(2.5) drop-shadow(0 0 20px rgba(255,200,0,1));   }
-  85%  { transform: scale(2.1);  filter: brightness(5)   drop-shadow(0 0 32px rgba(255,240,80,1));  }
-  100% { transform: scale(2.6);  filter: brightness(8);  opacity: 0; }
+  0%   { transform: scale(1);    filter: brightness(1); }
+  28%  { transform: scale(1.28); filter: brightness(1.6); }
+  62%  { transform: scale(1.65); filter: brightness(3); }
+  85%  { transform: scale(2.05); filter: brightness(5.5); }
+  100% { transform: scale(2.4);  filter: brightness(8); opacity: 0; }
 }
 .tile.bomb-launch {
-  animation: bomb-launch-anim 0.32s cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation: bomb-launch-anim 0.26s cubic-bezier(0.4, 0, 1, 1) forwards;
   z-index: 10;
   pointer-events: none;
 }
@@ -827,6 +841,24 @@ body {
   0%   { box-shadow: 0 0 0  0px rgba(255,160,0,1),   0 0 0  0px rgba(255,220,60,0.7); opacity: 1; }
   40%  { box-shadow: 0 0 0 36px rgba(255,120,0,0.45), 0 0 0 18px rgba(255,200,0,0.6); opacity: 1; }
   100% { box-shadow: 0 0 0 88px rgba(255,80,0,0),    0 0 0 60px rgba(255,180,0,0);   opacity: 0; }
+}
+
+/* Double bomb flash — brighter & wider */
+.double-bomb-flash {
+  background: radial-gradient(ellipse at center, rgba(255,245,130,0.95) 0%, rgba(255,160,0,0.6) 38%, transparent 72%);
+  animation: bomb-flash-anim 0.30s ease-out forwards;
+}
+
+/* Double bomb shockwave — much bigger ring */
+.double-bomb-shockwave {
+  animation: double-bomb-shockwave-anim 0.88s cubic-bezier(0, 0.5, 0.8, 1) forwards;
+}
+
+@keyframes double-bomb-shockwave-anim {
+  0%   { box-shadow: 0 0 0   0px rgba(255,210,0,1),    0 0 0   0px rgba(255,80,0,0.85),  0 0 0   0px rgba(255,255,150,0.7); opacity: 1; }
+  30%  { box-shadow: 0 0 0  50px rgba(255,160,0,0.65), 0 0 0  26px rgba(255,220,0,0.7),  0 0 0  14px rgba(255,255,180,0.5); opacity: 1; }
+  65%  { box-shadow: 0 0 0  90px rgba(255,100,0,0.30), 0 0 0  60px rgba(255,180,0,0.35), 0 0 0  38px rgba(255,255,100,0.2); opacity: 0.8; }
+  100% { box-shadow: 0 0 0 148px rgba(255,60,0,0),     0 0 0 110px rgba(255,160,0,0),    0 0 0  80px rgba(255,240,0,0);    opacity: 0; }
 }
 
 /* Board shake — brief grid tremor */
