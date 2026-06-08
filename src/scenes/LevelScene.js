@@ -9,6 +9,7 @@ const POINTS_PER_TILE = 10;
 const TARGET_SCORE    = 1500;
 const MAX_MOVES       = 30;
 const EGG_COUNT       = 10;
+const BOX_COUNT       = 8;
 const SWAP_MS         = 140;
 const POP_MS          = 220;
 const FALL_MS         = 190;
@@ -33,7 +34,7 @@ export class LevelScene {
   create() {
     this.board          = new Board(8, 8);
     this.detector       = new MatchDetector(this.board);
-    this.objectives     = new LevelObjectives({ targetScore: TARGET_SCORE, maxMoves: MAX_MOVES, eggsRequired: EGG_COUNT });
+    this.objectives     = new LevelObjectives({ targetScore: TARGET_SCORE, maxMoves: MAX_MOVES, eggsRequired: EGG_COUNT, boxesRequired: BOX_COUNT });
     this.trexo          = new TRexo();
     this.selected       = null;
     this.busy           = false;
@@ -44,6 +45,7 @@ export class LevelScene {
     if (GameConfig.debug?.startingBoosterPairs) this._injectBoosterPairs();
     else if (GameConfig.debug?.startingBoosters) this._injectStartingBoosters();
     this._injectFossilEggs();
+    this._injectDinoCrates();
 
     this.element = document.createElement('div');
     this.element.className = 'scene scene-level';
@@ -81,33 +83,34 @@ export class LevelScene {
 
   _buildHTML() {
     return `
-      <div class="level-header">
-        <button class="btn-icon" id="btn-back-level" title="Menú">&#8592;</button>
-        <div class="level-hud">
-          <div class="hud-item">
-            <span class="hud-label">Puntos</span>
-            <span class="hud-value" id="score-value">0 / ${TARGET_SCORE}</span>
-          </div>
-          <span class="hud-sep">🦕</span>
-          <div class="hud-item">
-            <span class="hud-label">Movimientos</span>
-            <span class="hud-value" id="moves-value">${MAX_MOVES}</span>
+      <div class="level-topbar">
+        <div class="topbar-left">
+          <div class="topbar-panel">
+            <div class="topbar-panel-header">
+              <button class="topbar-back-btn" id="btn-back-level" title="Menú">&#8592;</button>
+              <span class="topbar-panel-title">Objetivo</span>
+            </div>
+            <div class="topbar-obj-row">
+              <span class="topbar-obj-icon">🥚</span>
+              <span id="egg-count" class="topbar-obj-count">0/${EGG_COUNT}</span>
+            </div>
+            <div class="topbar-obj-row">
+              <span class="topbar-obj-icon">📦</span>
+              <span id="box-count" class="topbar-obj-count">0/${BOX_COUNT}</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="objectives-bar">
-        <div class="obj-item">
-          <span class="obj-icon">🥚</span>
-          <div class="obj-progress">
-            <span class="obj-label">Huevos fósiles</span>
-            <span class="obj-count" id="egg-count">0 / ${EGG_COUNT}</span>
+        <div class="topbar-center" id="trexo-container"></div>
+        <div class="topbar-right">
+          <div class="topbar-panel">
+            <span class="topbar-panel-title">Pasos</span>
+            <span id="moves-value" class="topbar-moves-num">${MAX_MOVES}</span>
           </div>
         </div>
       </div>
       <div class="score-bar-wrapper">
         <div class="score-bar" id="score-bar" style="width:0%"></div>
       </div>
-      <div id="trexo-container"></div>
       <div class="board-area">
         <div class="board-grid" id="board-grid"></div>
       </div>
@@ -187,6 +190,7 @@ export class LevelScene {
   // ── Tap-tap ───────────────────────────────────────
 
   _onTileClick(col, row) {
+    if (this.board.getTile(col, row)?.obstacle?.startsWith('box')) return;
     if (!this.selected) {
       this.selected = { col, row };
       this._getTileEl(col, row)?.classList.add('selected');
@@ -229,6 +233,18 @@ export class LevelScene {
           el.classList.add('tile-egg');
           el.dataset.obstacle = 'egg';
           el.textContent = '🥚';
+        } else if (tile.obstacle === 'box-3') {
+          el.classList.add('tile-box', 'tile-box-3');
+          el.dataset.obstacle = 'box-3';
+          el.textContent = '🦖';
+        } else if (tile.obstacle === 'box-2') {
+          el.classList.add('tile-box', 'tile-box-2');
+          el.dataset.obstacle = 'box-2';
+          el.textContent = '🦕';
+        } else if (tile.obstacle === 'box-1') {
+          el.classList.add('tile-box', 'tile-box-1');
+          el.dataset.obstacle = 'box-1';
+          el.textContent = '🦎';
         } else if (tile.booster) {
           el.dataset.booster = tile.booster;
           if      (tile.booster === 'color-bomb') el.textContent = '🌈';
@@ -268,6 +284,12 @@ export class LevelScene {
       eggEl.textContent = `${this.objectives.eggsBroken} / ${this.objectives.eggsRequired}`;
       if (this.objectives.eggsBroken >= this.objectives.eggsRequired)
         eggEl.classList.add('obj-complete');
+    }
+    const boxEl = this.element?.querySelector('#box-count');
+    if (boxEl) {
+      boxEl.textContent = `${this.objectives.boxesBroken} / ${this.objectives.boxesRequired}`;
+      if (this.objectives.boxesBroken >= this.objectives.boxesRequired)
+        boxEl.classList.add('obj-complete');
     }
     if (barEl) {
       const pct = this.objectives.eggsRequired > 0
@@ -340,8 +362,7 @@ export class LevelScene {
     await this._wait(POP_MS);
     if (!this.element) return;
 
-    this._processEggBreaks(affected);
-    this.board.removeMatched(affected);
+    this.board.removeMatched(this._applyObstacleHits(affected));
     this.board.applyGravity();
     this.board.refill();
     this._renderBoard();
@@ -421,8 +442,7 @@ export class LevelScene {
     await this._wait(POP_MS);
     if (!this.element) return;
 
-    this._processEggBreaks(affected);
-    this.board.removeMatched(affected);
+    this.board.removeMatched(this._applyObstacleHits(affected));
     this.board.applyGravity();
     this.board.refill();
     this._renderBoard();
@@ -472,8 +492,7 @@ export class LevelScene {
     await this._wait(POP_MS);
     if (!this.element) return;
 
-    this._processEggBreaks(toRemove);
-    this.board.removeMatched(toRemove);
+    this.board.removeMatched(this._applyObstacleHits(toRemove));
     this.board.applyGravity();
     this.board.refill();
     this._renderBoard();
@@ -521,8 +540,7 @@ export class LevelScene {
     await this._wait(POP_MS);
     if (!this.element) return;
 
-    this._processEggBreaks([...targets, { col, row }]);
-    this.board.removeMatched([...targets, { col, row }]);
+    this.board.removeMatched(this._applyObstacleHits([...targets, { col, row }]));
     this.board.applyGravity();
     this.board.refill();
     this._renderBoard();
@@ -533,6 +551,16 @@ export class LevelScene {
 
   async _attemptSwap(col1, row1, col2, row2) {
     this.busy = true;
+
+    // Boxes are immovable — block any swap involving them
+    if (this.board.getTile(col1, row1)?.obstacle?.startsWith('box') ||
+        this.board.getTile(col2, row2)?.obstacle?.startsWith('box')) {
+      this._getTileEl(col1, row1)?.classList.add('shake');
+      this._getTileEl(col2, row2)?.classList.add('shake');
+      await this._wait(SHAKE_MS);
+      this.busy = false;
+      return;
+    }
 
     await this._animateSwap(col1, row1, col2, row2);
     this.board.swapTiles(col1, row1, col2, row2);
@@ -551,6 +579,24 @@ export class LevelScene {
       this._checkGameOver();
       this.busy = false;
       return;
+    }
+
+    // Rocket + Bomb combo → thick cross clear (3 rows × 3 cols)
+    {
+      const isRocketA = tileA?.booster === 'rocket-h' || tileA?.booster === 'rocket-v';
+      const isRocketB = tileB?.booster === 'rocket-h' || tileB?.booster === 'rocket-v';
+      const isBombA   = tileA?.booster === 'bomb';
+      const isBombB   = tileB?.booster === 'bomb';
+      if ((isRocketA && isBombB) || (isBombA && isRocketB)) {
+        this.objectives.useMove();
+        await this._fireRocketBomb(col1, row1, col2, row2);
+        await this._runCascade(-1, -1);
+        this._updateHUD();
+        if (!this.element) return;
+        this._checkGameOver();
+        this.busy = false;
+        return;
+      }
     }
 
     // Ptero: any swap activates it
@@ -734,6 +780,25 @@ export class LevelScene {
         }
       }
 
+      // ── Adjacent crate damage ─────────────────────
+      const boxDamaged    = [];
+      const checkedCrates = new Set();
+      for (const key of [...removeSet]) {
+        const [c, r] = key.split(',').map(Number);
+        for (const [dc, dr] of [[0,1],[0,-1],[1,0],[-1,0]]) {
+          const nc = c + dc, nr = r + dr;
+          if (nc < 0 || nc >= this.board.cols || nr < 0 || nr >= this.board.rows) continue;
+          const nKey = `${nc},${nr}`;
+          if (removeSet.has(nKey) || checkedCrates.has(nKey)) continue;
+          const nt = this.board.getTile(nc, nr);
+          if (!nt?.obstacle?.startsWith('box')) continue;
+          checkedCrates.add(nKey);
+          if      (nt.obstacle === 'box-1') removeSet.add(nKey);
+          else if (nt.obstacle === 'box-2') boxDamaged.push({ col: nc, row: nr, newObstacle: 'box-1' });
+          else if (nt.obstacle === 'box-3') boxDamaged.push({ col: nc, row: nr, newObstacle: 'box-2' });
+        }
+      }
+
       const hasBooster = newRockets.length > 0 || newBombs.length > 0 || newColorBombs.length > 0 || newPteros.length > 0 || removeSet.size > initSize;
       const pts        = removeSet.size * POINTS_PER_TILE + (hasBooster ? Math.max(ROCKET_BONUS, BOMB_BONUS) : 0);
       this.objectives.addScore(pts);
@@ -758,8 +823,7 @@ export class LevelScene {
       if (!this.element) return;
 
       const removeArr = [...removeSet].map(k => { const [col, row] = k.split(',').map(Number); return { col, row }; });
-      this._processEggBreaks(removeArr);
-      this.board.removeMatched(removeArr);
+      this.board.removeMatched(this._applyObstacleHits(removeArr));
 
       // Place new rockets
       for (const nr of newRockets) {
@@ -788,6 +852,11 @@ export class LevelScene {
           const tile = this.board.getTile(np.col, np.row);
           if (tile) tile.booster = 'ptero';
         }
+      }
+      // Crack adjacent crates (reduce resistance)
+      for (const p of boxDamaged) {
+        const tile = this.board.getTile(p.col, p.row);
+        if (tile) tile.obstacle = p.newObstacle;
       }
 
       this.board.applyGravity();
@@ -834,14 +903,24 @@ export class LevelScene {
     }, 500);
   }
 
-  _processEggBreaks(positions) {
+  _applyObstacleHits(positions) {
+    const keep = [];
     for (const p of positions) {
       const tile = this.board.getTile(p.col, p.row);
-      if (tile?.obstacle === 'egg') {
-        tile.obstacle = null;
-        this.objectives.breakEgg();
+      if (!tile) { keep.push(p); continue; }
+      if (tile.obstacle === 'egg') {
+        tile.obstacle = null; this.objectives.breakEgg(); keep.push(p);
+      } else if (tile.obstacle === 'box-1') {
+        tile.obstacle = null; this.objectives.breakBox(); keep.push(p);
+      } else if (tile.obstacle === 'box-2') {
+        tile.obstacle = 'box-1'; // damaged, stays on board
+      } else if (tile.obstacle === 'box-3') {
+        tile.obstacle = 'box-2'; // damaged, stays on board
+      } else {
+        keep.push(p); // normal tile → remove
       }
     }
+    return keep;
   }
 
   _injectFossilEggs(count = EGG_COUNT) {
@@ -941,17 +1020,115 @@ export class LevelScene {
     await this._wait(POP_MS);
     if (!this.element) return;
 
-    this._processEggBreaks(affected);
-    this.board.removeMatched(affected);
+    this.board.removeMatched(this._applyObstacleHits(affected));
     this.board.applyGravity();
     this.board.refill();
     this._renderBoard();
     await this._wait(FALL_MS);
   }
 
+  // ── Rocket + Bomb combo fire ──────────────────────
+
+  async _fireRocketBomb(col1, row1, col2, row2) {
+    if (!this.element) return;
+
+    this.trexo?.react('rocketBomb');
+
+    // Phase 1: both boosters build up
+    this._getTileEl(col1, row1)?.classList.add('bomb-launch');
+    this._getTileEl(col2, row2)?.classList.add('bomb-launch');
+    await this._wait(240);
+    if (!this.element) return;
+
+    // Cross center between the two boosters
+    const cCol = Math.round((col1 + col2) / 2);
+    const cRow = Math.round((row1 + row2) / 2);
+
+    // 3 full rows + 3 full columns centered at cCol/cRow
+    const affectedSet = new Set();
+    for (let dr = -1; dr <= 1; dr++) {
+      const r = cRow + dr;
+      if (r >= 0 && r < this.board.rows)
+        for (let c = 0; c < this.board.cols; c++) affectedSet.add(`${c},${r}`);
+    }
+    for (let dc = -1; dc <= 1; dc++) {
+      const c = cCol + dc;
+      if (c >= 0 && c < this.board.cols)
+        for (let r = 0; r < this.board.rows; r++) affectedSet.add(`${c},${r}`);
+    }
+    const affected = [...affectedSet]
+      .map(k => { const [c, r] = k.split(',').map(Number); return { col: c, row: r }; })
+      .sort((a, b) => (Math.abs(a.col - cCol) + Math.abs(a.row - cRow)) - (Math.abs(b.col - cCol) + Math.abs(b.row - cRow)));
+
+    // Phase 2: flash + shockwave + shake
+    const gridEl = this.element.querySelector('#board-grid');
+    if (gridEl) {
+      const flash = document.createElement('div');
+      flash.className = 'bomb-flash double-bomb-flash';
+      gridEl.appendChild(flash);
+      setTimeout(() => flash.remove(), 280);
+
+      const refEl = this._getTileEl(col1, row1);
+      if (refEl) {
+        const bRect = refEl.getBoundingClientRect();
+        const gRect = gridEl.getBoundingClientRect();
+        const wave  = document.createElement('div');
+        wave.className = 'bomb-shockwave';
+        wave.style.left = `${bRect.left + bRect.width  / 2 - gRect.left}px`;
+        wave.style.top  = `${bRect.top  + bRect.height / 2 - gRect.top}px`;
+        gridEl.appendChild(wave);
+        setTimeout(() => wave.remove(), 700);
+      }
+      gridEl.classList.add('board-shake');
+      setTimeout(() => gridEl.classList.remove('board-shake'), 360);
+    }
+
+    // Phase 3: radiating cross sweep from center outward
+    const STAGGER = 12;
+    affected.forEach((p, i) => {
+      const el = this._getTileEl(p.col, p.row);
+      if (el) { el.style.setProperty('--sweep-delay', `${i * STAGGER}ms`); el.classList.add('rocket-sweep'); }
+    });
+
+    this.objectives.addScore(affected.length * POINTS_PER_TILE + ROCKET_BONUS + BOMB_BONUS);
+    this._updateHUD();
+    this._bumpScore();
+    await this._wait((affected.length - 1) * STAGGER + 280);
+    if (!this.element) return;
+
+    for (const p of affected) {
+      const el = this._getTileEl(p.col, p.row);
+      if (el) { el.classList.remove('rocket-sweep'); el.classList.add('matched'); }
+    }
+    await this._wait(POP_MS);
+    if (!this.element) return;
+
+    this.board.removeMatched(this._applyObstacleHits(affected));
+    this.board.applyGravity();
+    this.board.refill();
+    this._renderBoard();
+    await this._wait(FALL_MS);
+  }
+
+  _injectDinoCrates() {
+    // Fixed cluster pattern: bottom rows (7,6) + middle row (4)
+    // Resistances: 1=easy, 2=medium, 3=hard
+    const pattern = [
+      { col: 2, row: 7, res: 1 }, { col: 3, row: 7, res: 2 },
+      { col: 4, row: 7, res: 2 }, { col: 5, row: 7, res: 1 },
+      { col: 3, row: 6, res: 2 }, { col: 4, row: 6, res: 3 },
+      { col: 1, row: 4, res: 3 }, { col: 6, row: 4, res: 3 },
+    ];
+    for (const { col, row, res } of pattern) {
+      const tile = this.board.getTile(col, row);
+      if (tile && !tile.booster) tile.obstacle = `box-${res}`;
+    }
+  }
+
   _injectBoosterPairs() {
     const pairs = [
       ['bomb', 'bomb'],
+      ['bomb', 'rocket-h'],
       ['rocket-h', 'rocket-v'],
       ['color-bomb', 'color-bomb'],
       ['ptero', 'ptero'],

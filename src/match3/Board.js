@@ -70,23 +70,32 @@ export class Board {
     }
   }
 
-  // Tiles fall down to fill null gaps
+  // Tiles fall down; box obstacles are static barriers that block falling
   applyGravity() {
     for (let c = 0; c < this.cols; c++) {
-      let writeRow = this.rows - 1;
-      for (let r = this.rows - 1; r >= 0; r--) {
-        if (this.grid[r][c] !== null) {
-          if (r !== writeRow) {
-            this.grid[writeRow][c] = this.grid[r][c];
-            this.grid[writeRow][c].row = writeRow;
-            this.grid[r][c] = null;
+      let segStart = 0;
+      for (let r = 0; r <= this.rows; r++) {
+        const isBarrier = r < this.rows && this.grid[r][c]?.obstacle?.startsWith('box');
+        if (isBarrier || r === this.rows) {
+          // Apply gravity within segment [segStart, r-1]
+          let writeRow = r - 1;
+          for (let i = r - 1; i >= segStart; i--) {
+            const tile = this.grid[i][c];
+            if (tile !== null) {
+              if (i !== writeRow) {
+                this.grid[writeRow][c] = tile;
+                tile.row = writeRow;
+                this.grid[i][c] = null;
+              }
+              writeRow--;
+            }
           }
-          writeRow--;
+          while (writeRow >= segStart) {
+            this.grid[writeRow][c] = null;
+            writeRow--;
+          }
+          segStart = r + 1;
         }
-      }
-      while (writeRow >= 0) {
-        this.grid[writeRow][c] = null;
-        writeRow--;
       }
     }
   }

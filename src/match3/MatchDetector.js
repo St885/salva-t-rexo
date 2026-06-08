@@ -13,7 +13,7 @@ export class MatchDetector {
       let runType = -1, runStart = 0;
       for (let c = 0; c <= this.board.cols; c++) {
         const tile = c < this.board.cols ? this.board.getTile(c, r) : null;
-        const type = tile ? tile.type : -1;
+        const type = (tile && !tile.obstacle?.startsWith('box')) ? tile.type : -1;
         if (type !== runType) {
           if (c - runStart >= this.minLength) {
             for (let x = runStart; x < c; x++) matched.add(`${x},${r}`);
@@ -29,7 +29,7 @@ export class MatchDetector {
       let runType = -1, runStart = 0;
       for (let r = 0; r <= this.board.rows; r++) {
         const tile = r < this.board.rows ? this.board.getTile(c, r) : null;
-        const type = tile ? tile.type : -1;
+        const type = (tile && !tile.obstacle?.startsWith('box')) ? tile.type : -1;
         if (type !== runType) {
           if (r - runStart >= this.minLength) {
             for (let y = runStart; y < r; y++) matched.add(`${c},${y}`);
@@ -54,7 +54,7 @@ export class MatchDetector {
       let runType = -1, runStart = 0;
       for (let c = 0; c <= this.board.cols; c++) {
         const tile = c < this.board.cols ? this.board.getTile(c, r) : null;
-        const type = tile ? tile.type : -1;
+        const type = (tile && !tile.obstacle?.startsWith('box')) ? tile.type : -1;
         if (type !== runType) {
           if (c - runStart >= this.minLength) {
             const positions = [];
@@ -70,7 +70,7 @@ export class MatchDetector {
       let runType = -1, runStart = 0;
       for (let r = 0; r <= this.board.rows; r++) {
         const tile = r < this.board.rows ? this.board.getTile(c, r) : null;
-        const type = tile ? tile.type : -1;
+        const type = (tile && !tile.obstacle?.startsWith('box')) ? tile.type : -1;
         if (type !== runType) {
           if (r - runStart >= this.minLength) {
             const positions = [];

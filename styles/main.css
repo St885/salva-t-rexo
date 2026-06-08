@@ -195,24 +195,28 @@ body {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 5px 12px;
-  background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.25) 100%);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 6px 12px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.30) 100%);
+  border-bottom: 1px solid rgba(255,200,60,0.14);
+  box-shadow: 0 1px 0 rgba(255,200,60,0.06), 0 4px 14px rgba(0,0,0,0.38);
   flex-shrink: 0;
 }
 
 .obj-item {
   display: flex;
   align-items: center;
-  gap: 7px;
-  background: rgba(0,0,0,0.38);
-  border: 1px solid rgba(255,255,255,0.13);
-  border-radius: 20px;
-  padding: 4px 14px 4px 8px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), 0 2px 8px rgba(0,0,0,0.3);
+  gap: 8px;
+  background: linear-gradient(180deg, rgba(90,50,0,0.52) 0%, rgba(40,22,0,0.48) 100%);
+  border: 1px solid rgba(255,200,60,0.28);
+  border-radius: 22px;
+  padding: 5px 16px 5px 9px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,220,80,0.18),
+    0 2px 10px rgba(0,0,0,0.38),
+    0 0 14px rgba(255,175,30,0.08);
 }
 
-.obj-icon { font-size: 1.25rem; line-height: 1; }
+.obj-icon { font-size: 1.4rem; line-height: 1; }
 
 .obj-progress {
   display: flex;
@@ -221,20 +225,20 @@ body {
 }
 
 .obj-label {
-  font-size: 0.5rem;
+  font-size: 0.48rem;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  opacity: 0.6;
-  color: #d8f3dc;
+  letter-spacing: 0.9px;
+  color: rgba(255,210,100,0.72);
   line-height: 1.2;
 }
 
 .obj-count {
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: #ffd60a;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  font-size: 1.0rem;
+  font-weight: 900;
+  color: #ffe040;
+  text-shadow: 0 0 8px rgba(255,200,30,0.55), 0 1px 4px rgba(0,0,0,0.55);
   line-height: 1.1;
+  letter-spacing: -0.2px;
 }
 
 @keyframes obj-complete-pulse {
@@ -280,6 +284,229 @@ body {
 }
 
 /* ================================================
+   Dino Crate obstacle tile
+   ================================================ */
+
+/* Shared: immovable cursor */
+.tile.tile-box { cursor: default; }
+
+/* Resistance 3 — T-Rex crate (darkest, iron-reinforced) */
+.tile.tile-box-3 {
+  background: radial-gradient(ellipse at 33% 22%, #c08048 0%, #6a3010 44%, #3a1604 72%, #1e0c02 100%);
+  border: 2.5px solid rgba(175, 108, 48, 0.95);
+  box-shadow:
+    0 5px 0 #180804,
+    0 0 18px rgba(120,55,18,0.65),
+    inset 0 1px 0 rgba(220,130,55,0.24),
+    inset 0 0 10px rgba(60,20,0,0.25);
+  animation: box-shimmer 2.0s ease-in-out infinite;
+}
+
+/* Resistance 2 — Dino crate (medium wood) */
+.tile.tile-box-2 {
+  background: radial-gradient(ellipse at 33% 22%, #d8a858 0%, #8c5218 46%, #5a2e08 72%, #3c1a04 100%);
+  border: 2px solid rgba(200, 144, 64, 0.90);
+  box-shadow:
+    0 5px 0 #3c1a04,
+    0 0 14px rgba(175,108,38,0.55),
+    inset 0 1px 0 rgba(220,158,68,0.20);
+  animation: box-shimmer 2.3s ease-in-out infinite;
+}
+
+/* Resistance 1 — Lizard crate (cracked, weakest) */
+.tile.tile-box-1 {
+  background:
+    linear-gradient(150deg, transparent 28%, rgba(0,0,0,0.52) 28.5%, rgba(0,0,0,0.52) 30%, transparent 30.5%),
+    linear-gradient(232deg, transparent 45%, rgba(0,0,0,0.36) 45.5%, rgba(0,0,0,0.36) 47%, transparent 47.5%),
+    radial-gradient(ellipse at 33% 22%, #deba68 0%, #a07028 46%, #6c3e10 72%, #402208 100%);
+  border: 2px solid rgba(185, 130, 52, 0.80);
+  box-shadow: 0 4px 0 #402208, 0 0 8px rgba(150,95,25,0.40);
+  filter: brightness(0.82);
+  animation: none;
+}
+
+@keyframes box-shimmer {
+  0%, 100% { filter: brightness(1); }
+  50%       { filter: brightness(1.14); }
+}
+
+@keyframes box-smash {
+  0%   { transform: scale(1)    rotate(0deg);  filter: brightness(1); }
+  18%  { transform: scale(1.24) rotate(-7deg); filter: brightness(2.4); }
+  48%  { transform: scale(0.82) rotate(5deg);  filter: brightness(1.5); }
+  100% { transform: scale(0)    rotate(14deg); opacity: 0; }
+}
+
+.tile.box-smash {
+  animation: box-smash 0.30s ease forwards;
+  pointer-events: none;
+}
+
+/* ================================================
+   Level Scene — Premium 3-panel topbar
+   ================================================ */
+
+.level-topbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px;
+  background: linear-gradient(160deg, #0d2040 0%, #162f52 55%, #112444 100%);
+  border-bottom: 2px solid rgba(255, 215, 60, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 2px 0 rgba(255,215,60,0.07),
+    0 6px 20px rgba(0,0,0,0.5);
+  flex-shrink: 0;
+  min-height: 80px;
+}
+
+.topbar-left, .topbar-right {
+  flex: 0 0 92px;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+.topbar-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.topbar-panel {
+  flex: 1;
+  background: linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(0,0,0,0.32) 100%);
+  border: 1.5px solid rgba(255, 215, 60, 0.36);
+  border-radius: 13px;
+  padding: 5px 8px 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 3px 10px rgba(0,0,0,0.42);
+}
+
+.topbar-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  justify-content: center;
+}
+
+.topbar-back-btn {
+  background: rgba(0,0,0,0.32);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  width: 24px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+  line-height: 1;
+}
+.topbar-back-btn:active { background: rgba(0,0,0,0.55); transform: scale(0.92); }
+
+.topbar-panel-title {
+  font-size: 0.46rem;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: rgba(255, 215, 60, 0.82);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.topbar-obj-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+}
+
+.topbar-obj-icon { font-size: 1.05rem; line-height: 1; }
+
+.topbar-obj-count {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #ffd630;
+  text-shadow: 0 0 8px rgba(255,210,30,0.5), 0 1px 3px rgba(0,0,0,0.5);
+  line-height: 1;
+  letter-spacing: -0.2px;
+}
+
+.topbar-moves-num {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #ffd630;
+  text-shadow: 0 0 18px rgba(255,210,30,0.55), 0 2px 6px rgba(0,0,0,0.6);
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.topbar-moves-num.moves-warning {
+  animation: moves-pulse 0.7s ease infinite;
+  display: inline-block;
+  color: #ff6060;
+}
+
+/* T-REXo in topbar center — vertical layout */
+.topbar-center .trexo-strip {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  min-height: auto;
+  width: 100%;
+}
+
+.topbar-center .trexo-face {
+  width: 50px;
+  height: 50px;
+  font-size: 1.85rem;
+  background: radial-gradient(circle at 38% 32%, rgba(80,220,140,0.42) 0%, rgba(8,36,24,0.75) 100%);
+  border: 2px solid rgba(255, 215, 60, 0.58);
+  box-shadow:
+    0 0 16px rgba(255,215,60,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    0 4px 14px rgba(0,0,0,0.45);
+}
+
+.topbar-center .trexo-bubble {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 130px;
+  background: rgba(255,255,255,0.14);
+  border: 1.5px solid rgba(255,255,255,0.22);
+  color: #f0faef;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.topbar-center .trexo-bubble::before { display: none; }
+
+/* ================================================
    Level Scene — Board + HUD + Overlay
    ================================================ */
 
@@ -299,10 +526,13 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px;
-  background: linear-gradient(180deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.45) 100%);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.05), 0 5px 18px rgba(0,0,0,0.4);
+  padding: 8px 10px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(4,16,10,0.58) 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 1px 0 rgba(255,255,255,0.05),
+    0 6px 22px rgba(0,0,0,0.5);
   flex-shrink: 0;
 }
 
@@ -319,28 +549,32 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 0;
-  background: rgba(0, 0, 0, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 12px;
-  padding: 4px 12px;
-  min-width: 74px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.35);
+  background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(0,0,0,0.44) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  border-radius: 14px;
+  padding: 5px 14px;
+  min-width: 78px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(0,0,0,0.35),
+    0 3px 12px rgba(0,0,0,0.42);
 }
 
 .hud-label {
-  font-size: 0.55rem;
+  font-size: 0.52rem;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  opacity: 0.6;
-  color: #d8f3dc;
+  letter-spacing: 0.9px;
+  opacity: 0.65;
+  color: #c8ecd4;
 }
 
 .hud-value {
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-size: 1.12rem;
+  font-weight: 900;
   color: #ffd60a;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  text-shadow: 0 0 10px rgba(255,214,10,0.45), 0 1px 4px rgba(0,0,0,0.55);
   line-height: 1.2;
+  letter-spacing: -0.3px;
 }
 
 .hud-trexo {
@@ -349,13 +583,13 @@ body {
 }
 
 .btn-icon {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.36) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   color: #ffffff;
   font-size: 1rem;
   font-weight: 700;
   padding: 5px 10px;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   min-height: 36px;
   min-width: 36px;
@@ -363,6 +597,7 @@ body {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .btn-icon:active {
@@ -615,25 +850,26 @@ body {
   align-items: center;
   gap: 10px;
   padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.28);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(0,0,0,0.34) 0%, rgba(0,0,0,0.18) 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
   flex-shrink: 0;
-  min-height: 46px;
+  min-height: 44px;
 }
 
 /* Circular avatar container for T-REXo emoji */
 .trexo-face {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: radial-gradient(circle at 38% 32%, rgba(80,200,120,0.38) 0%, rgba(15,50,30,0.65) 100%);
+  border: 1.5px solid rgba(100,220,140,0.42);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   line-height: 1;
   flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(80,200,120,0.22), inset 0 1px 0 rgba(255,255,255,0.14);
 }
 
 @keyframes trexo-bounce {
@@ -650,36 +886,38 @@ body {
 .trexo-bubble {
   position: relative;
   flex: 1;
-  background: rgba(255, 255, 255, 0.11);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 12px 12px 12px 4px;
-  padding: 5px 12px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: #e8f8ee;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1.5px solid rgba(255, 255, 255, 0.24);
+  border-radius: 14px 14px 14px 4px;
+  padding: 5px 14px;
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: #f0faef;
   line-height: 1.3;
   min-height: 32px;
   display: flex;
   align-items: center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 8px rgba(0,0,0,0.22);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
 /* Speech-bubble tail pointing left toward T-REXo avatar */
 .trexo-bubble::before {
   content: '';
   position: absolute;
-  left: -6px;
+  left: -7px;
   top: 50%;
   transform: translateY(-50%);
   width: 0;
   height: 0;
   border-style: solid;
-  border-width: 5px 6px 5px 0;
-  border-color: transparent rgba(255, 255, 255, 0.18) transparent transparent;
+  border-width: 5px 7px 5px 0;
+  border-color: transparent rgba(255, 255, 255, 0.24) transparent transparent;
 }
 
 @keyframes bubble-flash {
-  0%   { background: rgba(255, 255, 255, 0.28); }
-  100% { background: rgba(255, 255, 255, 0.1);  }
+  0%   { background: rgba(255, 255, 255, 0.36); border-color: rgba(255,255,255,0.45); }
+  100% { background: rgba(255, 255, 255, 0.16); border-color: rgba(255,255,255,0.24); }
 }
 
 .trexo-bubble.bubble-flash {
