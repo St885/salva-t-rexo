@@ -8,10 +8,11 @@ const POPUPS = {
 };
 
 export class JurassicBaseScene {
-  constructor(container, onPlay, onBack) {
+  constructor(container, onPlay, onBack, onPark = null) {
     this.container      = container;
     this.onPlay         = onPlay;
     this.onBack         = onBack;
+    this.onPark         = onPark;
     this.element        = null;
     this._timerInterval = null;
   }
@@ -51,10 +52,10 @@ export class JurassicBaseScene {
           <div class="jbase-card-name">Misiones</div>
           <div class="jbase-card-badge">3 activas</div>
         </div>
-        <div class="jbase-card jbase-card--locked" data-popup="park">
+        <div class="jbase-card jbase-card--glow" data-action="park">
           <div class="jbase-card-icon">🦕</div>
           <div class="jbase-card-name">Parque Dino</div>
-          <div class="jbase-card-sub">Próximamente</div>
+          <div class="jbase-card-sub">Ver colección</div>
         </div>
         <div class="jbase-card jbase-card--glow" data-popup="chest">
           <div class="jbase-card-icon">🎁</div>
@@ -85,6 +86,7 @@ export class JurassicBaseScene {
     this.element.querySelector('#jbase-popup-close').addEventListener('click', () => this._closePopup());
     this.element.querySelectorAll('.jbase-card').forEach(card => {
       card.addEventListener('click', () => {
+        if (card.dataset.action === 'park') { this.onPark?.(); return; }
         const key = card.dataset.popup;
         if (key && POPUPS[key]) this._showPopup(POPUPS[key]);
       });

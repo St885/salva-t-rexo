@@ -5,6 +5,7 @@ export const SCENES = {
   LEVEL_PREP:    'level_prep',
   LEVEL:         'level',
   RESULT:        'result',
+  DINO_PARK:     'dino_park',
 };
 
 export const TILE_TYPES = {

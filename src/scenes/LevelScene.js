@@ -3,7 +3,9 @@ import { MatchDetector }   from '../match3/MatchDetector.js';
 import { LevelObjectives } from '../match3/LevelObjectives.js';
 import { TILE_COLORS }     from '../match3/Tile.js';
 import { TRexo }           from '../characters/TRexo.js';
-import { GameConfig }      from '../config/gameConfig.js';
+import { GameConfig }          from '../config/gameConfig.js';
+import { DangerEventPanel }    from './DangerEventPanel.js';
+import { addFragment }         from '../utils/dinoStorage.js';
 
 const POINTS_PER_TILE = 10;
 const TARGET_SCORE    = 1500;
@@ -54,6 +56,8 @@ export class LevelScene {
     this.container.appendChild(this.element);
 
     this.trexo.createIn(this.element.querySelector('#trexo-container'));
+    this.dangerPanel = new DangerEventPanel();
+    this.dangerPanel.createIn(this.element.querySelector('#dep-container'));
 
     this._boundMouseMove = (e) => this._onDragMove(e);
     this._boundMouseUp   = (e) => this._onDragEnd(e);
@@ -73,6 +77,8 @@ export class LevelScene {
       this._boundMouseMove = null;
       this._boundMouseUp   = null;
     }
+    this.dangerPanel?.destroy();
+    this.dangerPanel = null;
     this.trexo?.destroy();
     this.element?.remove();
     this.element = null;
@@ -112,6 +118,7 @@ export class LevelScene {
       <div class="score-bar-wrapper">
         <div class="score-bar" id="score-bar" style="width:0%"></div>
       </div>
+      <div id="dep-container"></div>
       <div class="board-area">
         <div class="board-grid" id="board-grid"></div>
       </div>
@@ -277,7 +284,7 @@ export class LevelScene {
       movesEl.textContent = left;
       if (left <= 5 && left > 0) {
         movesEl.classList.add('moves-warning');
-        if (!this._lowMovesAlert) { this._lowMovesAlert = true; this.trexo?.react('lowMoves'); }
+        if (!this._lowMovesAlert) { this._lowMovesAlert = true; this.trexo?.react('lowMoves'); this.dangerPanel?.onLowMoves(); }
       } else { movesEl.classList.remove('moves-warning'); }
     }
     const eggEl = this.element?.querySelector('#egg-count');
@@ -341,6 +348,7 @@ export class LevelScene {
       : Array.from({ length: this.board.rows }, (_, r) => ({ col, row: r }));
 
     this.trexo?.react('rocket');
+    this.dangerPanel?.onBooster();
     this._getTileEl(col, row)?.classList.add('rocket-launch');
     await this._wait(160);
     if (!this.element) return;
@@ -386,6 +394,7 @@ export class LevelScene {
     }
 
     this.trexo?.react('bomb');
+    this.dangerPanel?.onBooster();
 
     // Phase 1 — buildup: bomb grows with intensifying glow
     this._getTileEl(col, row)?.classList.add('bomb-launch');
@@ -457,6 +466,7 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('ptero');
+    this.dangerPanel?.onBooster();
     this._getTileEl(col, row)?.classList.add('ptero-launch');
     await this._wait(175);
     if (!this.element) return;
@@ -506,6 +516,7 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('colorBomb');
+    this.dangerPanel?.onBooster();
     this._getTileEl(col, row)?.classList.add('color-bomb-launch');
     await this._wait(200);
     if (!this.element) return;
@@ -805,11 +816,14 @@ export class LevelScene {
       this.objectives.addScore(pts);
       this._updateHUD();
       this._bumpScore();
-      this.trexo?.react(newColorBombs.length > 0 ? 'colorBomb'
-                      : newPteros.length > 0 ? 'ptero'
-                      : newBombs.length > 0 || removeSet.size > initSize ? 'bomb'
-                      : hasBooster ? 'rocket'
-                      : removeSet.size >= 5 ? 'bigMatch' : 'match');
+      { const _r = newColorBombs.length > 0 ? 'colorBomb'
+                 : newPteros.length > 0 ? 'ptero'
+                 : newBombs.length > 0 || removeSet.size > initSize ? 'bomb'
+                 : hasBooster ? 'rocket'
+                 : removeSet.size >= 5 ? 'bigMatch' : 'match';
+        this.trexo?.react(_r);
+        if (['colorBomb','ptero','bomb','rocket'].includes(_r)) this.dangerPanel?.onBooster();
+        else this.dangerPanel?.onMatch(); }
 
       for (const key of removeSet) {
         const [c, r] = key.split(',').map(Number);
@@ -892,6 +906,8 @@ export class LevelScene {
     if (!this.objectives.isOver()) return;
     const won = this.objectives.isWon();
     this.trexo?.react(won ? 'win' : 'lose');
+    this.dangerPanel?.[won ? 'onWin' : 'onLose']();
+    if (won) addFragment('trexo');
     setTimeout(() => {
       if (!this.element) return;
       const overlay = this.element.querySelector('#game-overlay');
@@ -953,6 +969,7 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('megaBomb');
+    this.dangerPanel?.onBooster();
 
     // Phase 1: both bombs build up
     this._getTileEl(col1, row1)?.classList.add('bomb-launch');
@@ -1034,6 +1051,7 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('rocketBomb');
+    this.dangerPanel?.onBooster();
 
     // Phase 1: both boosters build up
     this._getTileEl(col1, row1)?.classList.add('bomb-launch');

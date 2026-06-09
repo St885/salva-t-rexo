@@ -6,6 +6,7 @@ import { JurassicBaseScene }     from '../scenes/JurassicBaseScene.js';
 import { LevelPreparationScene } from '../scenes/LevelPreparationScene.js';
 import { LevelScene }            from '../scenes/LevelScene.js';
 import { ResultScene }           from '../scenes/ResultScene.js';
+import { DinoCollectionScene }   from '../scenes/DinoCollectionScene.js';
 import { SCENES }                from '../utils/constants.js';
 
 export class Game {
@@ -30,7 +31,15 @@ export class Game {
       new JurassicBaseScene(
         this.container,
         () => this._show(SCENES.LEVEL_PREP),
-        () => this._show(SCENES.MENU)
+        () => this._show(SCENES.MENU),
+        () => this._show(SCENES.DINO_PARK)
+      )
+    );
+    this.sceneManager.register(
+      SCENES.DINO_PARK,
+      new DinoCollectionScene(
+        this.container,
+        () => this._show(SCENES.JURASSIC_BASE)
       )
     );
     this.sceneManager.register(

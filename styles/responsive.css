@@ -186,6 +186,14 @@
 
 /* ── Landscape mobile — compact layout ── */
 @media (max-height: 520px) and (orientation: landscape) {
+  /* Compact danger panel in landscape */
+  .dep-scene       { height: 52px; }
+  .dep-trexo-wrap  { height: 34px; bottom: 8px; }
+  .dep-shark-wrap  { height: 30px; bottom: 8px; }
+  .dep-wake        { width: 20px; }
+  .dep-shore::after { font-size: 1.1rem; bottom: 5px; }
+  .dep-msg         { font-size: 0.54rem; top: 4px; padding: 1px 7px; }
+
   .level-header {
     padding: 6px 10px;
   }
