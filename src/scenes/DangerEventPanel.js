@@ -132,6 +132,7 @@ export class DangerEventPanel {
         </div>
         <div class="dep-trexo-wrap" id="dep-trexo">
           <div class="dep-wake"></div>
+          <div class="dep-trexo-glow" id="dep-trexo-glow"></div>
           ${SVG_TREXO}
         </div>
         <div class="dep-msg" id="dep-msg">¡El tiburón me sigue!</div>
@@ -149,6 +150,31 @@ export class DangerEventPanel {
   onLowMoves() { this._move(-12,  pick(MSGS.danger),  false);     }
   onWin()      { this._moveTo(100, MSGS.win,  'win');  }
   onLose()     { this._moveTo(0,   MSGS.lose, 'lose'); }
+
+  onRocket()    { this._move(+22, '¡Turbo! 🚀',              'booster'); }
+  onBomb()      { this._bombWave();        this._move(+15, '¡Ola explosiva! 💥', 'booster'); }
+  onColorBomb() { this._rainbowGlow();     this._move(+18, '¡Energía arcoíris! 🌈', 'booster'); }
+  onPtero()     { this._spawnPteroHelper(); this._move(+14, '¡Ayuda aérea! 🦅', 'match'); }
+  onMegaCombo() { this._bombWave(); this._flashScene(); this._move(+30, '¡Combo salvaje! 🔥', 'booster'); }
+
+  onTimePressure(timePct) {
+    if (!this.element) return;
+    // Shark creeps closer as time runs out
+    if (timePct < 0.5) {
+      const delta = timePct < 0.17 ? -2.2 : timePct < 0.33 ? -1.0 : -0.45;
+      this._dist  = Math.max(0, this._dist + delta);
+      this._apply(false);
+    }
+    // Danger overlay follows time pressure
+    const overlay = this.element.querySelector('#dep-overlay');
+    const scene   = this.element.querySelector('#dep-scene');
+    if (!overlay?.classList.contains('dep-overlay--win')) {
+      overlay?.classList.toggle('dep-overlay--danger', timePct < 0.30 || this._dist < 30);
+      scene?.classList.toggle('dep-scene--tense', timePct < 0.17);
+    }
+  }
+
+  setMessage(msg) { this._setMsg(msg); }
 
   _move(delta, msg, fx) {
     this._dist = Math.max(0, Math.min(100, this._dist + delta));
@@ -240,6 +266,39 @@ export class DangerEventPanel {
       host.appendChild(sl);
       setTimeout(() => sl.remove(), 430);
     }
+  }
+
+  _bombWave() {
+    const shark = this.element?.querySelector('#dep-shark');
+    if (!shark) return;
+    shark.classList.add('dep-shark--wave');
+    setTimeout(() => shark?.classList.remove('dep-shark--wave'), 700);
+  }
+
+  _rainbowGlow() {
+    const glow = this.element?.querySelector('#dep-trexo-glow');
+    if (!glow) return;
+    glow.classList.remove('dep-glow--active');
+    void glow.offsetWidth;
+    glow.classList.add('dep-glow--active');
+    setTimeout(() => glow?.classList.remove('dep-glow--active'), 700);
+  }
+
+  _spawnPteroHelper() {
+    const host = this.element?.querySelector('#dep-particles');
+    if (!host) return;
+    const el = document.createElement('div');
+    el.className = 'dep-ptero-helper';
+    el.textContent = '🦅';
+    host.appendChild(el);
+    setTimeout(() => el.remove(), 860);
+  }
+
+  _flashScene() {
+    const overlay = this.element?.querySelector('#dep-overlay');
+    if (!overlay) return;
+    overlay.classList.add('dep-overlay--flash');
+    setTimeout(() => overlay?.classList.remove('dep-overlay--flash'), 400);
   }
 
   _setMsg(msg) {

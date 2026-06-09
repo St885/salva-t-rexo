@@ -20,6 +20,7 @@ const DRAG_THRESHOLD  = 22;
 const ROCKET_BONUS       = 60;
 const BOMB_BONUS         = 80;
 const DOUBLE_BOMB_BONUS  = 220;
+const LEVEL_TIME         = GameConfig.gameplay?.levelTimeSeconds ?? 60;
 
 export class LevelScene {
   constructor(container, onBack) {
@@ -42,6 +43,9 @@ export class LevelScene {
     this.busy           = false;
     this._drag          = null;
     this._lowMovesAlert = false;
+    this._timeLeft      = LEVEL_TIME;
+    this._timerInterval = null;
+    this._gameEnded     = false;
 
     this.board.init();
     if (GameConfig.debug?.startingBoosterPairs) this._injectBoosterPairs();
@@ -68,6 +72,7 @@ export class LevelScene {
     this._renderBoard();
     this._updateHUD();
     setTimeout(() => this.trexo?.react('start'), 400);
+    this._startTimer();
   }
 
   destroy() {
@@ -77,6 +82,8 @@ export class LevelScene {
       this._boundMouseMove = null;
       this._boundMouseUp   = null;
     }
+    clearInterval(this._timerInterval);
+    this._timerInterval = null;
     this.dangerPanel?.destroy();
     this.dangerPanel = null;
     this.trexo?.destroy();
@@ -90,35 +97,44 @@ export class LevelScene {
 
   _buildHTML() {
     return `
-      <div class="level-topbar">
-        <div class="topbar-left">
-          <div class="topbar-panel">
-            <div class="topbar-panel-header">
-              <button class="topbar-back-btn" id="btn-back-level" title="Menú">&#8592;</button>
-              <span class="topbar-panel-title">Objetivo</span>
+      <div class="hud-card">
+        <div class="level-topbar">
+          <div class="topbar-left">
+            <div class="topbar-panel">
+              <div class="topbar-panel-header">
+                <button class="topbar-back-btn" id="btn-back-level" title="Menú">&#8592;</button>
+                <span class="topbar-panel-title">Objetivo</span>
+              </div>
+              <div class="topbar-obj-row">
+                <span class="topbar-obj-icon">🥚</span>
+                <span id="egg-count" class="topbar-obj-count">0/${EGG_COUNT}</span>
+              </div>
+              <div class="topbar-obj-row">
+                <span class="topbar-obj-icon">📦</span>
+                <span id="box-count" class="topbar-obj-count">0/${BOX_COUNT}</span>
+              </div>
             </div>
-            <div class="topbar-obj-row">
-              <span class="topbar-obj-icon">🥚</span>
-              <span id="egg-count" class="topbar-obj-count">0/${EGG_COUNT}</span>
-            </div>
-            <div class="topbar-obj-row">
-              <span class="topbar-obj-icon">📦</span>
-              <span id="box-count" class="topbar-obj-count">0/${BOX_COUNT}</span>
+          </div>
+          <div class="topbar-center" id="trexo-container"></div>
+          <div class="topbar-right">
+            <div class="topbar-panel topbar-panel--split">
+              <div class="topbar-split-row">
+                <span class="topbar-panel-title">Pasos</span>
+                <span id="moves-value" class="topbar-moves-num">${MAX_MOVES}</span>
+              </div>
+              <div class="topbar-divider"></div>
+              <div class="topbar-split-row">
+                <span class="topbar-panel-title">&#9201;</span>
+                <span id="time-value" class="topbar-time-num">${LEVEL_TIME}</span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="topbar-center" id="trexo-container"></div>
-        <div class="topbar-right">
-          <div class="topbar-panel">
-            <span class="topbar-panel-title">Pasos</span>
-            <span id="moves-value" class="topbar-moves-num">${MAX_MOVES}</span>
-          </div>
+        <div class="score-bar-wrapper">
+          <div class="score-bar" id="score-bar" style="width:0%"></div>
         </div>
+        <div id="dep-container"></div>
       </div>
-      <div class="score-bar-wrapper">
-        <div class="score-bar" id="score-bar" style="width:0%"></div>
-      </div>
-      <div id="dep-container"></div>
       <div class="board-area">
         <div class="board-grid" id="board-grid"></div>
       </div>
@@ -348,7 +364,7 @@ export class LevelScene {
       : Array.from({ length: this.board.rows }, (_, r) => ({ col, row: r }));
 
     this.trexo?.react('rocket');
-    this.dangerPanel?.onBooster();
+    this.dangerPanel?.onRocket();
     this._getTileEl(col, row)?.classList.add('rocket-launch');
     await this._wait(160);
     if (!this.element) return;
@@ -394,7 +410,7 @@ export class LevelScene {
     }
 
     this.trexo?.react('bomb');
-    this.dangerPanel?.onBooster();
+    this.dangerPanel?.onBomb();
 
     // Phase 1 — buildup: bomb grows with intensifying glow
     this._getTileEl(col, row)?.classList.add('bomb-launch');
@@ -466,7 +482,7 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('ptero');
-    this.dangerPanel?.onBooster();
+    this.dangerPanel?.onPtero();
     this._getTileEl(col, row)?.classList.add('ptero-launch');
     await this._wait(175);
     if (!this.element) return;
@@ -516,7 +532,7 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('colorBomb');
-    this.dangerPanel?.onBooster();
+    this.dangerPanel?.onColorBomb();
     this._getTileEl(col, row)?.classList.add('color-bomb-launch');
     await this._wait(200);
     if (!this.element) return;
@@ -903,7 +919,9 @@ export class LevelScene {
   }
 
   _checkGameOver() {
-    if (!this.objectives.isOver()) return;
+    if (!this.objectives.isOver() || this._gameEnded) return;
+    this._gameEnded = true;
+    clearInterval(this._timerInterval);
     const won = this.objectives.isWon();
     this.trexo?.react(won ? 'win' : 'lose');
     this.dangerPanel?.[won ? 'onWin' : 'onLose']();
@@ -969,7 +987,7 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('megaBomb');
-    this.dangerPanel?.onBooster();
+    this.dangerPanel?.onMegaCombo();
 
     // Phase 1: both bombs build up
     this._getTileEl(col1, row1)?.classList.add('bomb-launch');
@@ -1051,7 +1069,7 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('rocketBomb');
-    this.dangerPanel?.onBooster();
+    this.dangerPanel?.onMegaCombo();
 
     // Phase 1: both boosters build up
     this._getTileEl(col1, row1)?.classList.add('bomb-launch');
@@ -1235,6 +1253,46 @@ export class LevelScene {
         }
       }
     } catch {}
+  }
+
+  _startTimer() {
+    const URGENCY = ['¡Rápido!', '¡Se acaba el tiempo!', '¡Corre T-REXo!'];
+    this._timerInterval = setInterval(() => {
+      if (!this.element || this._gameEnded) { clearInterval(this._timerInterval); return; }
+      this._timeLeft = Math.max(0, this._timeLeft - 1);
+      this._updateTimerHUD();
+      const pct = this._timeLeft / LEVEL_TIME;
+      this.dangerPanel?.onTimePressure(pct);
+      if (this._timeLeft <= 10 && this._timeLeft > 0)
+        this.dangerPanel?.setMessage(URGENCY[Math.floor(Math.random() * URGENCY.length)]);
+      if (this._timeLeft <= 0) { clearInterval(this._timerInterval); this._onTimeUp(); }
+    }, 1000);
+  }
+
+  _updateTimerHUD() {
+    const el = this.element?.querySelector('#time-value');
+    if (!el) return;
+    el.textContent = this._timeLeft;
+    el.className   = 'topbar-time-num';
+    if      (this._timeLeft <= 10) el.classList.add('time-critical');
+    else if (this._timeLeft <= 30) el.classList.add('time-warning');
+  }
+
+  _onTimeUp() {
+    if (this._gameEnded) return;
+    this._gameEnded = true;
+    this.trexo?.react('lose');
+    this.dangerPanel?.onLose();
+    setTimeout(() => {
+      if (!this.element) return;
+      const overlay = this.element.querySelector('#game-overlay');
+      const emojiEl = this.element.querySelector('#overlay-emoji');
+      const msgEl   = this.element.querySelector('#overlay-msg');
+      if (!overlay) return;
+      emojiEl.textContent = '⏰';
+      msgEl.textContent   = '¡Se acabó el tiempo! T-REXo fue alcanzado.';
+      overlay.classList.remove('hidden');
+    }, 600);
   }
 
   _wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
