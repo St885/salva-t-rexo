@@ -10,7 +10,7 @@ export class MenuScene {
     this.element.className = 'scene scene-menu';
     this.element.innerHTML = `
       <div class="menu-content">
-        <div class="trexo-emoji">🦕</div>
+        <div class="trexo-emoji">🦖</div>
         <h1 class="game-title">Salva a T-REXo</h1>
         <p class="game-subtitle">Ayuda a T-REXo resolviendo puzzles.</p>
         <button class="btn-play" id="btn-play">Jugar</button>

@@ -343,6 +343,54 @@ body {
 }
 
 /* ================================================
+   Liana Jurásica obstacle tile
+   ================================================ */
+
+.tile.tile-liana { cursor: default; }
+
+/* Resistance 2 — thick vines, strong */
+.tile.tile-liana-2 {
+  background:
+    radial-gradient(circle at 25% 30%, rgba(120, 255, 140, 0.18) 0%, transparent 45%),
+    linear-gradient(148deg, #1a6b2a 0%, #0d4018 42%, #062610 72%, #021408 100%);
+  border: 2.5px solid rgba(80, 220, 100, 0.92);
+  box-shadow:
+    0 5px 0 #031a08,
+    0 0 18px rgba(60, 200, 90, 0.65),
+    inset 0 1px 0 rgba(160, 255, 130, 0.22),
+    inset 0 0 12px rgba(0, 80, 20, 0.30);
+  animation: liana-sway 3.2s ease-in-out infinite;
+}
+
+/* Resistance 1 — cracked vines, weak */
+.tile.tile-liana-1 {
+  background:
+    linear-gradient(225deg, transparent 30%, rgba(0,0,0,0.42) 30.5%, rgba(0,0,0,0.42) 32%, transparent 32.5%),
+    linear-gradient(148deg, #2a8a3c 0%, #165a20 44%, #0a3810 72%, #041c08 100%);
+  border: 2px solid rgba(100, 210, 115, 0.70);
+  box-shadow:
+    0 4px 0 #041c08,
+    0 0 10px rgba(60, 200, 90, 0.35);
+  filter: brightness(0.85);
+  animation: none;
+}
+
+@keyframes liana-sway {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 4px rgba(60,200,90,0.4)); }
+  50%       { filter: brightness(1.16) drop-shadow(0 0 8px rgba(80,240,110,0.6)); }
+}
+
+@keyframes liana-break {
+  0%   { transform: scale(1.2);  filter: brightness(2.4) drop-shadow(0 0 14px #60ff80); }
+  40%  { transform: scale(1.05); filter: brightness(1.6) drop-shadow(0 0 8px #40e060); }
+  100% { transform: scale(1);    filter: brightness(1); }
+}
+
+.tile.liana-break {
+  animation: liana-break 0.44s ease forwards;
+}
+
+/* ================================================
    Level Scene — HUD card + topbar
    ================================================ */
 
@@ -881,6 +929,369 @@ body {
   font-weight: 700;
   color: #d8f3dc;
   line-height: 1.4;
+}
+
+/* ================================================
+   Win Reward Modal (legacy — kept for safety)
+   ================================================ */
+
+/* ================================================
+   Victory Modal Premium
+   ================================================ */
+
+.victory-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 70;
+  overflow: hidden;
+  animation: vcFadeIn 0.35s ease;
+}
+.victory-overlay.hidden { display: none; }
+
+@keyframes vcFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.vc-box {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 215, 0, 0.18) 0%, transparent 55%),
+    linear-gradient(160deg, #1a2e18 0%, #0d1e0c 55%, #071008 100%);
+  border: 1.5px solid rgba(255, 215, 0, 0.42);
+  border-radius: 32px;
+  padding: 28px 22px 26px;
+  width: 88%;
+  max-width: 320px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow:
+    0 0 0 1px rgba(255, 215, 0, 0.10),
+    0 0 48px rgba(255, 215, 0, 0.18),
+    0 32px 80px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: vcBoxPop 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes vcBoxPop {
+  from { opacity: 0; transform: scale(0.82) translateY(24px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* T-REXo hero */
+.vc-hero { line-height: 1; }
+.vc-trexo {
+  font-size: 3.8rem;
+  display: inline-block;
+  animation: vcTrexoBounce 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  filter: drop-shadow(0 4px 12px rgba(255, 200, 0, 0.5));
+}
+@keyframes vcTrexoBounce {
+  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+  60%  { transform: scale(1.22) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Title */
+.vc-title {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #ffe066;
+  text-shadow: 0 0 24px rgba(255, 215, 0, 0.6), 0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: -0.01em;
+  animation: vcFadeSlide 0.45s ease 0.2s both;
+}
+.vc-subtitle {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(200, 255, 180, 0.72);
+  margin-top: -10px;
+  animation: vcFadeSlide 0.45s ease 0.3s both;
+}
+@keyframes vcFadeSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Stars */
+.vc-stars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  height: 68px;
+}
+.vc-star {
+  font-size: 2.8rem;
+  line-height: 1;
+  display: inline-block;
+  color: #555;
+  text-shadow: none;
+  transition: color 0.15s ease;
+}
+.vc-star--center {
+  font-size: 3.6rem;
+  margin-bottom: 2px;
+}
+.vc-star--dim {
+  color: rgba(80, 80, 80, 0.55);
+  filter: none;
+}
+.vc-star--earned {
+  color: #ffd700;
+  text-shadow:
+    0 0 18px rgba(255, 215, 0, 0.9),
+    0 0 36px rgba(255, 180, 0, 0.55);
+  animation: vcStarPop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes vcStarPop {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  55%  { transform: scale(1.35) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Rewards row */
+.vc-rewards {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
+}
+.vc-reward {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  padding: 12px 10px 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  animation: vcFadeSlide 0.45s ease both;
+}
+.vc-reward:nth-child(1) { animation-delay: 0.55s; }
+.vc-reward:nth-child(2) { animation-delay: 0.65s; }
+.vc-reward:nth-child(3) { animation-delay: 0.75s; }
+
+.vc-reward-icon {
+  font-size: 2rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+}
+.vc-reward-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #b8ecc8;
+  text-align: center;
+}
+
+/* Buttons */
+.vc-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+  animation: vcFadeSlide 0.45s ease 0.8s both;
+}
+.btn-vc-park {
+  padding: 13px 18px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(80, 210, 255, 0.45);
+  background: linear-gradient(145deg, rgba(25, 85, 125, 0.85) 0%, rgba(8, 45, 75, 0.92) 100%);
+  color: #a8e8ff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.12s, filter 0.12s;
+}
+.btn-vc-park:active { transform: translateY(2px); filter: brightness(0.88); }
+
+.btn-vc-continue {
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(145deg, #f9c74f 0%, #f4a61d 55%, #d4850a 100%);
+  color: #1a0e00;
+  font-size: 1.05rem;
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 5px 0 #8c5200, 0 8px 20px rgba(244, 166, 29, 0.40);
+  letter-spacing: 0.01em;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.btn-vc-continue:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #8c5200, 0 4px 10px rgba(244, 166, 29, 0.25);
+}
+
+/* Confetti */
+.vc-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.vc-confetti-piece {
+  position: absolute;
+  top: -12px;
+  border-radius: 2px;
+  opacity: 0.92;
+  animation: vcConfettiFall linear both;
+}
+@keyframes vcConfettiFall {
+  0%   { transform: translateY(0)    translateX(0)             rotate(0deg);   opacity: 0.92; }
+  100% { transform: translateY(340px) translateX(var(--cf-x)) rotate(360deg); opacity: 0; }
+}
+
+.reward-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  animation: rewardFadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reward-overlay.hidden { display: none; }
+
+@keyframes rewardFadeIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.reward-box {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(100, 255, 140, 0.14) 0%, transparent 60%),
+    linear-gradient(160deg, #1a3a28 0%, #0f2518 55%, #081a10 100%);
+  border: 1.5px solid rgba(80, 220, 110, 0.35);
+  border-radius: 32px;
+  padding: 32px 24px 28px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 320px;
+  width: 90%;
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(80, 220, 110, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+.reward-title {
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: #c8ffdc;
+  letter-spacing: -0.01em;
+  text-shadow: 0 0 20px rgba(80, 255, 130, 0.5);
+}
+
+.reward-subtitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(180, 240, 200, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: -12px;
+}
+
+.reward-items {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.reward-item {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 18px;
+  padding: 14px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 76px;
+  flex: 1;
+  animation: rewardItemPop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.reward-item:nth-child(1) { animation-delay: 0.08s; }
+.reward-item:nth-child(2) { animation-delay: 0.18s; }
+.reward-item:nth-child(3) { animation-delay: 0.28s; }
+
+@keyframes rewardItemPop {
+  from { opacity: 0; transform: translateY(14px) scale(0.85); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.reward-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+}
+
+.reward-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #b8ecc8;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.reward-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-reward-park {
+  padding: 14px 20px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(80, 210, 255, 0.50);
+  background: linear-gradient(145deg, rgba(30, 90, 130, 0.80) 0%, rgba(10, 50, 80, 0.90) 100%);
+  color: #a8e8ff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.btn-reward-park:active { transform: translateY(2px); filter: brightness(0.9); }
+
+.btn-reward-continue {
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(145deg, #2ecc71 0%, #27ae60 55%, #1e8449 100%);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 6px 0 #1a6b38, 0 8px 24px rgba(46, 204, 113, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  letter-spacing: 0.01em;
+}
+
+.btn-reward-continue:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #1a6b38, 0 4px 12px rgba(46, 204, 113, 0.25);
 }
 
 /* ================================================
@@ -2522,4 +2933,123 @@ body {
 @keyframes dep-flash-burst {
   0%   { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/* ================================================
+   Color-bomb premium visual effects
+   ================================================ */
+
+/* Phase 1 — Charge: bomb grows and cycles hue before launch */
+@keyframes color-bomb-charge-anim {
+  0%   { transform: scale(1);    filter: brightness(1.3) hue-rotate(0deg); }
+  28%  { transform: scale(1.22); filter: brightness(2.2) hue-rotate(90deg); }
+  62%  { transform: scale(1.18); filter: brightness(3.0) hue-rotate(210deg); }
+  100% { transform: scale(1.38); filter: brightness(4.5) hue-rotate(360deg); }
+}
+.tile.color-bomb-charge {
+  animation: color-bomb-charge-anim 0.30s ease-in-out forwards;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Phase 2 — Mark: target tiles shimmer to show they'll be hit */
+@keyframes color-bomb-mark-anim {
+  0%, 100% { filter: brightness(1.9) saturate(2.5);
+             box-shadow: 0 0 0 3px rgba(255,255,255,0.85), 0 0 14px rgba(220,140,255,0.75); }
+  50%       { filter: brightness(3.2) hue-rotate(80deg) saturate(3.5);
+             box-shadow: 0 0 0 4px rgba(255,210,255,1.0), 0 0 26px rgba(160,60,255,0.95); }
+}
+.tile.color-bomb-mark {
+  animation: color-bomb-mark-anim 0.18s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Phase 3 — Ray: beam drawn from bomb center to each target */
+.cb-ray {
+  position: absolute;
+  height: 3px;
+  border-radius: 2px;
+  transform-origin: left center;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,1) 0%,
+    hsl(var(--ray-hue, 0), 100%, 65%) 55%,
+    transparent 100%
+  );
+  box-shadow: 0 0 7px 2px hsl(var(--ray-hue, 0), 100%, 58%);
+  pointer-events: none;
+  z-index: 20;
+  animation: cb-ray-anim 0.22s ease forwards;
+}
+@keyframes cb-ray-anim {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  78%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Phase 3 — Central ring: expanding flash from bomb center */
+.cb-central-flash {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 21;
+  animation: cb-central-flash-anim 0.46s ease forwards;
+}
+@keyframes cb-central-flash-anim {
+  0%   { box-shadow: 0 0 0  0px rgba(255,255,255,1),    0 0 0  0px rgba(200,80,255,0.9); opacity: 1; }
+  38%  { box-shadow: 0 0 0 26px rgba(255,140,255,0.55), 0 0 0 13px rgba(255,255,255,0.7); opacity: 1; }
+  100% { box-shadow: 0 0 0 70px rgba(180,60,255,0),     0 0 0 52px rgba(255,255,255,0);  opacity: 0; }
+}
+
+/* Phase 3 — Particle: rainbow dot flying outward from bomb */
+.cb-particle {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 22;
+  animation: cb-particle-anim 0.62s ease forwards;
+}
+@keyframes cb-particle-anim {
+  0%   { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.1); opacity: 0; }
+}
+
+/* DangerEventPanel — rainbow flash overlay on color-bomb */
+.dep-overlay.dep-overlay--rainbow {
+  background: radial-gradient(ellipse at 60% 48%,
+    rgba(255,80,200,0.28) 0%,
+    rgba(80,200,255,0.18) 42%,
+    transparent 68%
+  );
+  animation: dep-rainbow-burst 0.62s ease-out forwards;
+  opacity: 1 !important;
+}
+@keyframes dep-rainbow-burst {
+  0%   { opacity: 1; filter: hue-rotate(0deg); }
+  45%  { opacity: 1; filter: hue-rotate(200deg); }
+  100% { opacity: 0; filter: hue-rotate(360deg); }
+}
+
+/* DangerEventPanel — T-REXo rainbow sprint on color-bomb */
+.dep-trexo-wrap.dep-trexo--rainbow {
+  animation: dep-trexo-rainbow 0.76s ease forwards;
+}
+@keyframes dep-trexo-rainbow {
+  0%   { filter: drop-shadow(0 5px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 20px rgba(255,60,60,0.9));
+         transform: translateY(-20px) rotate(-13deg) scaleX(1.30) scaleY(0.74); }
+  22%  { filter: drop-shadow(0 5px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 22px rgba(255,255,60,0.9));
+         transform: translateY(-9px)  rotate(-4deg)  scaleX(1.10) scaleY(0.93); }
+  50%  { filter: drop-shadow(0 5px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 24px rgba(60,255,180,0.9));
+         transform: translateY(-15px) rotate(-8deg)  scaleX(1.18) scaleY(0.84); }
+  78%  { filter: drop-shadow(0 5px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 20px rgba(80,140,255,0.9));
+         transform: translateY(-6px)  rotate(-2deg)  scaleX(1.05) scaleY(0.97); }
+  100% { filter: drop-shadow(0 5px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(70,220,110,0.3));
+         transform: translateY(0)     rotate(0deg)   scaleX(1)    scaleY(1); }
 }

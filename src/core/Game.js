@@ -52,7 +52,11 @@ export class Game {
     );
     this.sceneManager.register(
       SCENES.LEVEL,
-      new LevelScene(this.container, () => this._show(SCENES.JURASSIC_BASE))
+      new LevelScene(
+        this.container,
+        () => this._show(SCENES.JURASSIC_BASE),
+        () => this._show(SCENES.DINO_PARK)
+      )
     );
     this.sceneManager.register(
       SCENES.RESULT,

@@ -3,7 +3,7 @@ const POPUPS = {
   incubator: '🥚 ¡La incubadora estará lista pronto! Vuelve para recoger tu recompensa.',
   museum:    '🏛️ Colecciona fósiles superando niveles y llena el museo de fósiles.',
   missions:  '🎯 Completa misiones para ganar monedas, cofres y potenciadores especiales.',
-  park:      '🦕 Aquí vivirán los dinosaurios que desbloquees en tus aventuras.',
+  park:      '🦖 Aquí vivirán los dinosaurios que desbloquees en tus aventuras.',
   chest:     '🎁 ¡Recompensa gratuita disponible próximamente! Vuelve en unos minutos.',
 };
 
@@ -27,7 +27,7 @@ export class JurassicBaseScene {
           <h2 class="jbase-title">Base Jurásica</h2>
           <span class="jbase-subtitle">de T-REXo</span>
         </div>
-        <span class="jbase-header-dino">🦕</span>
+        <span class="jbase-header-dino">🦖</span>
       </div>
 
       <div class="jbase-grid">
@@ -53,7 +53,7 @@ export class JurassicBaseScene {
           <div class="jbase-card-badge">3 activas</div>
         </div>
         <div class="jbase-card jbase-card--glow" data-action="park">
-          <div class="jbase-card-icon">🦕</div>
+          <div class="jbase-card-icon">🦖</div>
           <div class="jbase-card-name">Parque Dino</div>
           <div class="jbase-card-sub">Ver colección</div>
         </div>

@@ -5,31 +5,37 @@ import { TILE_COLORS }     from '../match3/Tile.js';
 import { TRexo }           from '../characters/TRexo.js';
 import { GameConfig }          from '../config/gameConfig.js';
 import { DangerEventPanel }    from './DangerEventPanel.js';
-import { addFragment }         from '../utils/dinoStorage.js';
+import { addFragment }                    from '../utils/dinoStorage.js';
+import { getInventory, saveInventory, addCoins } from '../utils/storage.js';
 
 const POINTS_PER_TILE = 10;
 const TARGET_SCORE    = 1500;
 const MAX_MOVES       = 30;
 const EGG_COUNT       = 10;
 const BOX_COUNT       = 8;
+const LIANA_COUNT     = 6;
 const SWAP_MS         = 140;
 const POP_MS          = 220;
 const FALL_MS         = 190;
 const SHAKE_MS        = 240;
 const DRAG_THRESHOLD  = 22;
-const ROCKET_BONUS       = 60;
-const BOMB_BONUS         = 80;
-const DOUBLE_BOMB_BONUS  = 220;
+const ROCKET_BONUS        = 60;
+const BOMB_BONUS          = 80;
+const DOUBLE_BOMB_BONUS   = 220;
+const CROSS_BONUS         = 140;
+const PTERO_BOMB_BONUS    = 120;
+const DOUBLE_PTERO_BONUS  = 160;
 const LEVEL_TIME         = GameConfig.gameplay?.levelTimeSeconds ?? 60;
 
 export class LevelScene {
-  constructor(container, onBack) {
-    this.container = container;
-    this.onBack    = onBack;
-    this.element   = null;
-    this.selected  = null;
-    this.busy      = false;
-    this._drag     = null;
+  constructor(container, onBack, onDinoPark = null) {
+    this.container  = container;
+    this.onBack     = onBack;
+    this.onDinoPark = onDinoPark;
+    this.element    = null;
+    this.selected   = null;
+    this.busy       = false;
+    this._drag      = null;
   }
 
   // ── Lifecycle ─────────────────────────────────────
@@ -37,7 +43,10 @@ export class LevelScene {
   create() {
     this.board          = new Board(8, 8);
     this.detector       = new MatchDetector(this.board);
-    this.objectives     = new LevelObjectives({ targetScore: TARGET_SCORE, maxMoves: MAX_MOVES, eggsRequired: EGG_COUNT, boxesRequired: BOX_COUNT });
+    this.objectives     = new LevelObjectives({ targetScore: TARGET_SCORE, maxMoves: MAX_MOVES, eggsRequired: EGG_COUNT, boxesRequired: BOX_COUNT, lianaRequired: LIANA_COUNT });
+    this._lianasBrokenThisTurn = [];
+    this._rewardGiven  = false;
+    this._wonBooster   = null;
     this.trexo          = new TRexo();
     this.selected       = null;
     this.busy           = false;
@@ -52,6 +61,7 @@ export class LevelScene {
     else if (GameConfig.debug?.startingBoosters) this._injectStartingBoosters();
     this._injectFossilEggs();
     this._injectDinoCrates();
+    this._injectLianas();
     this._injectPendingBoosters();
 
     this.element = document.createElement('div');
@@ -113,6 +123,10 @@ export class LevelScene {
                 <span class="topbar-obj-icon">📦</span>
                 <span id="box-count" class="topbar-obj-count">0/${BOX_COUNT}</span>
               </div>
+              <div class="topbar-obj-row">
+                <span class="topbar-obj-icon">🌿</span>
+                <span id="liana-count" class="topbar-obj-count">0/${LIANA_COUNT}</span>
+              </div>
             </div>
           </div>
           <div class="topbar-center" id="trexo-container"></div>
@@ -145,6 +159,39 @@ export class LevelScene {
           <button class="btn-play" id="btn-overlay-menu">Volver al menú</button>
         </div>
       </div>
+      <div class="victory-overlay hidden" id="victory-overlay">
+        <div class="vc-confetti" id="vc-confetti"></div>
+        <div class="vc-box">
+          <div class="vc-hero">
+            <span class="vc-trexo">🦖</span>
+          </div>
+          <div class="vc-title">¡Nivel superado!</div>
+          <div class="vc-subtitle">¡Salvaste a T-REXo!</div>
+          <div class="vc-stars">
+            <span class="vc-star vc-star--dim" id="vc-star-1">★</span>
+            <span class="vc-star vc-star--dim vc-star--center" id="vc-star-2">★</span>
+            <span class="vc-star vc-star--dim" id="vc-star-3">★</span>
+          </div>
+          <div class="vc-rewards">
+            <div class="vc-reward">
+              <div class="vc-reward-icon">🦖</div>
+              <div class="vc-reward-label">+1 Fragmento</div>
+            </div>
+            <div class="vc-reward">
+              <div class="vc-reward-icon">🪙</div>
+              <div class="vc-reward-label">+50 Monedas</div>
+            </div>
+            <div class="vc-reward">
+              <div class="vc-reward-icon" id="vc-booster-icon">🚀</div>
+              <div class="vc-reward-label">+1 <span id="vc-booster-name">Cohete</span></div>
+            </div>
+          </div>
+          <div class="vc-buttons">
+            <button class="btn-vc-park" id="btn-vc-park">🦕 Parque Dino</button>
+            <button class="btn-vc-continue" id="btn-vc-continue">Continuar →</button>
+          </div>
+        </div>
+      </div>
     `;
   }
 
@@ -161,6 +208,10 @@ export class LevelScene {
       .addEventListener('click', () => this.onBack());
     this.element.querySelector('#btn-overlay-menu')
       .addEventListener('click', () => this.onBack());
+    this.element.querySelector('#btn-vc-continue')
+      .addEventListener('click', () => this.onBack());
+    this.element.querySelector('#btn-vc-park')
+      .addEventListener('click', () => (this.onDinoPark ?? this.onBack)());
   }
 
   // ── Pointer ───────────────────────────────────────
@@ -214,7 +265,8 @@ export class LevelScene {
   // ── Tap-tap ───────────────────────────────────────
 
   _onTileClick(col, row) {
-    if (this.board.getTile(col, row)?.obstacle?.startsWith('box')) return;
+    if (this.board.getTile(col, row)?.obstacle?.startsWith('box'))   return;
+    if (this.board.getTile(col, row)?.obstacle?.startsWith('liana')) return;
     if (!this.selected) {
       this.selected = { col, row };
       this._getTileEl(col, row)?.classList.add('selected');
@@ -253,7 +305,15 @@ export class LevelScene {
         el.dataset.col = c;
         el.dataset.row = r;
 
-        if (tile.obstacle === 'egg') {
+        if (tile.obstacle === 'liana-2') {
+          el.classList.add('tile-liana', 'tile-liana-2');
+          el.dataset.obstacle = 'liana-2';
+          el.textContent = TILE_COLORS[tile.type].emoji;
+        } else if (tile.obstacle === 'liana-1') {
+          el.classList.add('tile-liana', 'tile-liana-1');
+          el.dataset.obstacle = 'liana-1';
+          el.textContent = TILE_COLORS[tile.type].emoji;
+        } else if (tile.obstacle === 'egg') {
           el.classList.add('tile-egg');
           el.dataset.obstacle = 'egg';
           el.textContent = '🥚';
@@ -283,6 +343,13 @@ export class LevelScene {
         if (tile.isNew) { el.dataset.new = '1'; tile.isNew = false; }
         grid.appendChild(el);
       }
+    }
+    if (this._lianasBrokenThisTurn?.length) {
+      for (const p of this._lianasBrokenThisTurn) {
+        const el = this._getTileEl(p.col, p.row);
+        if (el) el.classList.add('liana-break');
+      }
+      this._lianasBrokenThisTurn = [];
     }
   }
 
@@ -314,6 +381,12 @@ export class LevelScene {
       boxEl.textContent = `${this.objectives.boxesBroken} / ${this.objectives.boxesRequired}`;
       if (this.objectives.boxesBroken >= this.objectives.boxesRequired)
         boxEl.classList.add('obj-complete');
+    }
+    const lianaEl = this.element?.querySelector('#liana-count');
+    if (lianaEl) {
+      lianaEl.textContent = `${this.objectives.lianasBroken} / ${this.objectives.lianaRequired}`;
+      if (this.objectives.lianasBroken >= this.objectives.lianaRequired)
+        lianaEl.classList.add('obj-complete');
     }
     if (barEl) {
       const pct = this.objectives.eggsRequired > 0
@@ -533,10 +606,17 @@ export class LevelScene {
 
     this.trexo?.react('colorBomb');
     this.dangerPanel?.onColorBomb();
-    this._getTileEl(col, row)?.classList.add('color-bomb-launch');
-    await this._wait(200);
+
+    // Phase 1 — Charge: bomb grows and cycles hue before launch
+    const cbEl = this._getTileEl(col, row);
+    cbEl?.classList.add('color-bomb-charge');
+    await this._wait(310);
     if (!this.element) return;
 
+    cbEl?.classList.remove('color-bomb-charge');
+    cbEl?.classList.add('color-bomb-launch');
+
+    // Collect targets
     const targets = [];
     for (let r = 0; r < this.board.rows; r++) {
       for (let c = 0; c < this.board.cols; c++) {
@@ -546,10 +626,76 @@ export class LevelScene {
       }
     }
 
+    await this._wait(140);
+    if (!this.element) return;
+
+    // Phase 2 — Mark: targets shimmer so the player sees what will be hit
+    for (const p of targets) {
+      const el = this._getTileEl(p.col, p.row);
+      if (el) el.classList.add('color-bomb-mark');
+    }
+    await this._wait(200);
+    if (!this.element) return;
+
+    // Phase 3 — Rays + central flash + board shake + rainbow particles
+    const gridEl = this.element.querySelector('#board-grid');
+    const bombEl = this._getTileEl(col, row);
+    if (gridEl && bombEl) {
+      const gRect = gridEl.getBoundingClientRect();
+      const bRect = bombEl.getBoundingClientRect();
+      const bx = bRect.left + bRect.width  / 2 - gRect.left;
+      const by = bRect.top  + bRect.height / 2 - gRect.top;
+
+      const RAINBOW_HUES = [0, 30, 60, 120, 180, 240, 290, 320];
+      const rays = [];
+      targets.forEach((p, i) => {
+        const tEl = this._getTileEl(p.col, p.row);
+        if (!tEl) return;
+        const tRect = tEl.getBoundingClientRect();
+        const tx = tRect.left + tRect.width  / 2 - gRect.left;
+        const ty = tRect.top  + tRect.height / 2 - gRect.top;
+        const dx = tx - bx, dy = ty - by;
+        const len = Math.hypot(dx, dy);
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        const ray = document.createElement('div');
+        ray.className = 'cb-ray';
+        ray.style.left      = `${bx}px`;
+        ray.style.top       = `${by}px`;
+        ray.style.width     = `${len}px`;
+        ray.style.transform = `rotate(${angle}deg)`;
+        ray.style.setProperty('--ray-hue', `${RAINBOW_HUES[i % RAINBOW_HUES.length]}`);
+        gridEl.appendChild(ray);
+        rays.push(ray);
+      });
+
+      const flash = document.createElement('div');
+      flash.className  = 'cb-central-flash';
+      flash.style.left = `${bx}px`;
+      flash.style.top  = `${by}px`;
+      gridEl.appendChild(flash);
+      setTimeout(() => flash.remove(), 520);
+
+      gridEl.classList.add('board-shake');
+      setTimeout(() => gridEl.classList.remove('board-shake'), 380);
+
+      this._spawnRainbowParticles(gridEl, bx, by);
+
+      await this._wait(220);
+      rays.forEach(r => r.remove());
+    } else {
+      await this._wait(220);
+    }
+    if (!this.element) return;
+
+    // Phase 4 — Sweep: staggered pop of all target tiles
     const STAGGER = 28;
     targets.forEach((p, i) => {
       const el = this._getTileEl(p.col, p.row);
-      if (el) { el.style.setProperty('--cb-delay', `${i * STAGGER}ms`); el.classList.add('color-bomb-sweep'); }
+      if (el) {
+        el.classList.remove('color-bomb-mark');
+        el.style.setProperty('--cb-delay', `${i * STAGGER}ms`);
+        el.classList.add('color-bomb-sweep');
+      }
     });
     this.objectives.addScore((targets.length + 1) * POINTS_PER_TILE + BOMB_BONUS * 2);
     this._updateHUD();
@@ -562,8 +708,8 @@ export class LevelScene {
       const el = this._getTileEl(p.col, p.row);
       if (el) { el.classList.remove('color-bomb-sweep'); el.classList.add('matched'); }
     }
-    const cbEl = this._getTileEl(col, row);
-    if (cbEl) cbEl.classList.add('matched');
+    const cbFinalEl = this._getTileEl(col, row);
+    if (cbFinalEl) cbFinalEl.classList.add('matched');
 
     await this._wait(POP_MS);
     if (!this.element) return;
@@ -575,14 +721,35 @@ export class LevelScene {
     await this._wait(FALL_MS);
   }
 
+  _spawnRainbowParticles(gridEl, cx, cy) {
+    const RAINBOW = ['#ff4455', '#ff8800', '#ffdd00', '#44ff88', '#44aaff', '#aa44ff', '#ff44cc'];
+    const count   = 10;
+    for (let i = 0; i < count; i++) {
+      const p     = document.createElement('div');
+      p.className = 'cb-particle';
+      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+      const dist  = 28 + Math.random() * 38;
+      p.style.left = `${cx}px`;
+      p.style.top  = `${cy}px`;
+      p.style.background = RAINBOW[i % RAINBOW.length];
+      p.style.setProperty('--tx', `${(Math.cos(angle) * dist).toFixed(1)}px`);
+      p.style.setProperty('--ty', `${(Math.sin(angle) * dist).toFixed(1)}px`);
+      p.style.animationDelay = `${i * 14}ms`;
+      gridEl.appendChild(p);
+      setTimeout(() => p.remove(), 750);
+    }
+  }
+
   // ── Game flow ─────────────────────────────────────
 
   async _attemptSwap(col1, row1, col2, row2) {
     this.busy = true;
 
-    // Boxes are immovable — block any swap involving them
-    if (this.board.getTile(col1, row1)?.obstacle?.startsWith('box') ||
-        this.board.getTile(col2, row2)?.obstacle?.startsWith('box')) {
+    // Boxes and lianas are immovable — block any swap involving them
+    if (this.board.getTile(col1, row1)?.obstacle?.startsWith('box')   ||
+        this.board.getTile(col2, row2)?.obstacle?.startsWith('box')   ||
+        this.board.getTile(col1, row1)?.obstacle?.startsWith('liana') ||
+        this.board.getTile(col2, row2)?.obstacle?.startsWith('liana')) {
       this._getTileEl(col1, row1)?.classList.add('shake');
       this._getTileEl(col2, row2)?.classList.add('shake');
       await this._wait(SHAKE_MS);
@@ -625,6 +792,56 @@ export class LevelScene {
         this.busy = false;
         return;
       }
+    }
+
+    // Rocket + Rocket combo → Cruz Dino (1 row + 1 col cross)
+    {
+      const isRocketA = tileA?.booster === 'rocket-h' || tileA?.booster === 'rocket-v';
+      const isRocketB = tileB?.booster === 'rocket-h' || tileB?.booster === 'rocket-v';
+      if (isRocketA && isRocketB) {
+        this.objectives.useMove();
+        await this._fireDoubleRocket(col1, row1, col2, row2);
+        await this._runCascade(-1, -1);
+        this._updateHUD();
+        if (!this.element) return;
+        this._checkGameOver();
+        this.busy = false;
+        return;
+      }
+    }
+
+    // Ptero + Bomb combo → Bomba Aérea
+    {
+      const isPteroA = tileA?.booster === 'ptero';
+      const isPteroB = tileB?.booster === 'ptero';
+      const isBombA  = tileA?.booster === 'bomb';
+      const isBombB  = tileB?.booster === 'bomb';
+      if ((isPteroA && isBombB) || (isBombA && isPteroB)) {
+        this.objectives.useMove();
+        const ptCol = isPteroA ? col1 : col2;
+        const ptRow = isPteroA ? row1 : row2;
+        const bmCol = isPteroA ? col2 : col1;
+        const bmRow = isPteroA ? row2 : row1;
+        await this._firePteroBomb(ptCol, ptRow, bmCol, bmRow);
+        await this._runCascade(-1, -1);
+        this._updateHUD();
+        if (!this.element) return;
+        this._checkGameOver();
+        this.busy = false;
+        return;
+      }
+    }
+
+    // Ptero + Ptero combo → Doble Ataque Aéreo
+    if (tileA?.booster === 'ptero' && tileB?.booster === 'ptero') {
+      this.objectives.useMove();
+      await this._fireDoublePtero(col1, row1, col2, row2);
+      await this._runCascade(-1, -1);
+      this._updateHUD();
+      if (!this.element) return;
+      this._checkGameOver();
+      this.busy = false;
+      return;
     }
 
     // Ptero: any swap activates it
@@ -925,17 +1142,95 @@ export class LevelScene {
     const won = this.objectives.isWon();
     this.trexo?.react(won ? 'win' : 'lose');
     this.dangerPanel?.[won ? 'onWin' : 'onLose']();
-    if (won) addFragment('trexo');
-    setTimeout(() => {
-      if (!this.element) return;
-      const overlay = this.element.querySelector('#game-overlay');
-      const emojiEl = this.element.querySelector('#overlay-emoji');
-      const msgEl   = this.element.querySelector('#overlay-msg');
-      if (!overlay) return;
-      emojiEl.textContent = won ? '🎉' : '😢';
-      msgEl.textContent   = won ? '¡Has ayudado a T-REXo!' : 'T-REXo necesita otro intento.';
-      overlay.classList.remove('hidden');
-    }, 500);
+    if (won) {
+      this._deliverRewards();
+      setTimeout(() => { if (this.element) this._showRewardModal(); }, 800);
+    } else {
+      setTimeout(() => {
+        if (!this.element) return;
+        const overlay = this.element.querySelector('#game-overlay');
+        const emojiEl = this.element.querySelector('#overlay-emoji');
+        const msgEl   = this.element.querySelector('#overlay-msg');
+        if (!overlay) return;
+        emojiEl.textContent = '😢';
+        msgEl.textContent   = 'T-REXo necesita otro intento.';
+        overlay.classList.remove('hidden');
+      }, 500);
+    }
+  }
+
+  _deliverRewards() {
+    if (this._rewardGiven) return;
+    this._rewardGiven = true;
+
+    addFragment('trexo');
+    addCoins(50);
+
+    const BOOSTERS = [
+      { key: 'rocket',    icon: '🚀', name: 'Cohete' },
+      { key: 'bomb',      icon: '💣', name: 'Bomba' },
+      { key: 'colorBomb', icon: '🌈', name: 'Arcoíris' },
+      { key: 'ptero',     icon: '🦅', name: 'Pterodáctilo' },
+    ];
+    const pick = BOOSTERS[Math.floor(Math.random() * BOOSTERS.length)];
+    const inv  = getInventory();
+    inv[pick.key] = (inv[pick.key] ?? 0) + 1;
+    saveInventory(inv);
+    this._wonBooster = pick;
+  }
+
+  _showRewardModal() {
+    const overlay = this.element?.querySelector('#victory-overlay');
+    if (!overlay || !this._wonBooster) return;
+
+    overlay.querySelector('#vc-booster-icon').textContent = this._wonBooster.icon;
+    overlay.querySelector('#vc-booster-name').textContent = this._wonBooster.name;
+
+    // Calculate stars from remaining time
+    const pct   = this._timeLeft / LEVEL_TIME;
+    const stars  = pct > 0.5 ? 3 : pct > 0.2 ? 2 : 1;
+
+    // Persist best star count
+    try {
+      const prev = parseInt(localStorage.getItem('trexo_level_stars') ?? '0', 10) || 0;
+      if (stars > prev) localStorage.setItem('trexo_level_stars', String(stars));
+    } catch {}
+
+    overlay.classList.remove('hidden');
+
+    // Animate stars in sequence
+    const starEls = overlay.querySelectorAll('.vc-star');
+    starEls.forEach((el, i) => {
+      if (i < stars) {
+        setTimeout(() => {
+          el.classList.remove('vc-star--dim');
+          el.classList.add('vc-star--earned');
+        }, 350 + i * 300);
+      }
+    });
+
+    // Confetti for 2+ stars
+    if (stars >= 2) {
+      setTimeout(() => this._spawnVictoryConfetti(overlay.querySelector('#vc-confetti')), 500);
+    }
+  }
+
+  _spawnVictoryConfetti(container) {
+    if (!container) return;
+    const COLORS = ['#ffd700','#ff6b35','#28a85f','#4895ef','#9b5de5','#ff6b6b','#fff'];
+    for (let i = 0; i < 28; i++) {
+      const el = document.createElement('div');
+      el.className = 'vc-confetti-piece';
+      el.style.left = `${Math.random() * 100}%`;
+      el.style.background = COLORS[i % COLORS.length];
+      el.style.animationDelay = `${(Math.random() * 0.5).toFixed(2)}s`;
+      el.style.animationDuration = `${(0.7 + Math.random() * 0.6).toFixed(2)}s`;
+      el.style.setProperty('--cf-x', `${((Math.random() - 0.5) * 110).toFixed(0)}px`);
+      el.style.width  = `${5 + Math.floor(Math.random() * 5)}px`;
+      el.style.height = `${8 + Math.floor(Math.random() * 6)}px`;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 1500);
+    }
   }
 
   _applyObstacleHits(positions) {
@@ -951,6 +1246,12 @@ export class LevelScene {
         tile.obstacle = 'box-1'; // damaged, stays on board
       } else if (tile.obstacle === 'box-3') {
         tile.obstacle = 'box-2'; // damaged, stays on board
+      } else if (tile.obstacle === 'liana-1') {
+        tile.obstacle = null; this.objectives.breakLiana();
+        this._lianasBrokenThisTurn.push({ col: p.col, row: p.row });
+        // tile stays on board — do NOT push to keep
+      } else if (tile.obstacle === 'liana-2') {
+        tile.obstacle = 'liana-1'; // cracked, stays on board
       } else {
         keep.push(p); // normal tile → remove
       }
@@ -1147,6 +1448,192 @@ export class LevelScene {
     await this._wait(FALL_MS);
   }
 
+  // ── Cruz Dino: Rocket + Rocket ───────────────────
+
+  async _fireDoubleRocket(col1, row1, col2, row2) {
+    if (!this.element) return;
+    this.trexo?.react('dinoCross');
+    this.dangerPanel?.onMegaCombo();
+
+    this._getTileEl(col1, row1)?.classList.add('rocket-launch');
+    this._getTileEl(col2, row2)?.classList.add('rocket-launch');
+    await this._wait(180);
+    if (!this.element) return;
+
+    const cCol = Math.round((col1 + col2) / 2);
+    const cRow = Math.round((row1 + row2) / 2);
+    const affSet = new Set();
+    for (let c = 0; c < this.board.cols; c++) affSet.add(`${c},${cRow}`);
+    for (let r = 0; r < this.board.rows; r++) affSet.add(`${cCol},${r}`);
+    const affected = [...affSet]
+      .map(k => { const [c, r] = k.split(',').map(Number); return { col: c, row: r }; })
+      .sort((a, b) =>
+        (Math.abs(a.col - cCol) + Math.abs(a.row - cRow)) -
+        (Math.abs(b.col - cCol) + Math.abs(b.row - cRow)));
+
+    const gridEl = this.element.querySelector('#board-grid');
+    if (gridEl) {
+      const flash = document.createElement('div');
+      flash.className = 'bomb-flash';
+      gridEl.appendChild(flash);
+      setTimeout(() => flash.remove(), 220);
+      gridEl.classList.add('board-shake');
+      setTimeout(() => gridEl.classList.remove('board-shake'), 320);
+    }
+
+    const STAGGER = 13;
+    affected.forEach((p, i) => {
+      const el = this._getTileEl(p.col, p.row);
+      if (el) { el.style.setProperty('--sweep-delay', `${i * STAGGER}ms`); el.classList.add('rocket-sweep'); }
+    });
+    this.objectives.addScore(affected.length * POINTS_PER_TILE + CROSS_BONUS);
+    this._updateHUD(); this._bumpScore();
+    await this._wait((affected.length - 1) * STAGGER + 220);
+    if (!this.element) return;
+
+    for (const p of affected) {
+      const el = this._getTileEl(p.col, p.row);
+      if (el) { el.classList.remove('rocket-sweep'); el.classList.add('matched'); }
+    }
+    await this._wait(POP_MS);
+    if (!this.element) return;
+    this.board.removeMatched(this._applyObstacleHits(affected));
+    this.board.applyGravity(); this.board.refill(); this._renderBoard();
+    await this._wait(FALL_MS);
+  }
+
+  // ── Bomba Aérea: Ptero + Bomb ─────────────────────
+
+  async _firePteroBomb(ptCol, ptRow, bmCol, bmRow) {
+    if (!this.element) return;
+    this.trexo?.react('pteroBomb');
+    this.dangerPanel?.onMegaCombo();
+
+    this._getTileEl(ptCol, ptRow)?.classList.add('ptero-launch');
+    await this._wait(200);
+    if (!this.element) return;
+
+    const target = this._findPriorityTarget([{ col: ptCol, row: ptRow }, { col: bmCol, row: bmRow }]);
+    const targetEl = this._getTileEl(target.col, target.row);
+    if (targetEl) targetEl.classList.add('ptero-impact');
+    await this._wait(260);
+    if (!this.element) return;
+
+    const explosion = [];
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        const r = target.row + dr, c = target.col + dc;
+        if (r >= 0 && r < this.board.rows && c >= 0 && c < this.board.cols)
+          explosion.push({ col: c, row: r });
+      }
+    }
+
+    const gridEl = this.element.querySelector('#board-grid');
+    if (gridEl && targetEl) {
+      const bRect = targetEl.getBoundingClientRect();
+      const gRect = gridEl.getBoundingClientRect();
+      const wave  = document.createElement('div');
+      wave.className = 'bomb-shockwave';
+      wave.style.left = `${bRect.left + bRect.width  / 2 - gRect.left}px`;
+      wave.style.top  = `${bRect.top  + bRect.height / 2 - gRect.top}px`;
+      gridEl.appendChild(wave);
+      setTimeout(() => wave.remove(), 680);
+      gridEl.classList.add('board-shake');
+      setTimeout(() => gridEl.classList.remove('board-shake'), 360);
+    }
+
+    for (const p of explosion) {
+      const el = this._getTileEl(p.col, p.row);
+      if (el) {
+        const dx = p.col - target.col, dy = p.row - target.row;
+        const dist = Math.max(Math.abs(dx), Math.abs(dy));
+        el.style.setProperty('--ex', `${dx * 24}px`);
+        el.style.setProperty('--ey', `${dy * 24}px`);
+        el.style.setProperty('--bomb-delay', `${dist * 28}ms`);
+        el.classList.add('bomb-explode');
+      }
+    }
+
+    const allSet = new Map();
+    for (const p of explosion) allSet.set(`${p.col},${p.row}`, p);
+    allSet.set(`${ptCol},${ptRow}`, { col: ptCol, row: ptRow });
+    allSet.set(`${bmCol},${bmRow}`, { col: bmCol, row: bmRow });
+    const allRemove = [...allSet.values()];
+
+    this.objectives.addScore(allRemove.length * POINTS_PER_TILE + PTERO_BOMB_BONUS);
+    this._updateHUD(); this._bumpScore();
+    await this._wait(360);
+    if (!this.element) return;
+
+    for (const p of allRemove) {
+      const el = this._getTileEl(p.col, p.row);
+      if (el) { el.classList.remove('bomb-explode', 'ptero-impact', 'ptero-launch'); el.classList.add('matched'); }
+    }
+    await this._wait(POP_MS);
+    if (!this.element) return;
+    this.board.removeMatched(this._applyObstacleHits(allRemove));
+    this.board.applyGravity(); this.board.refill(); this._renderBoard();
+    await this._wait(FALL_MS);
+  }
+
+  // ── Doble Ataque Aéreo: Ptero + Ptero ────────────
+
+  async _fireDoublePtero(col1, row1, col2, row2) {
+    if (!this.element) return;
+    this.trexo?.react('doublePtero');
+    this.dangerPanel?.onMegaCombo();
+
+    this._getTileEl(col1, row1)?.classList.add('ptero-launch');
+    this._getTileEl(col2, row2)?.classList.add('ptero-launch');
+    await this._wait(200);
+    if (!this.element) return;
+
+    const excludes  = [{ col: col1, row: row1 }, { col: col2, row: row2 }];
+    const toRemove  = [...excludes];
+    for (let i = 0; i < 3; i++) {
+      const t = this._findPriorityTarget(excludes);
+      excludes.push(t);
+      toRemove.push(t);
+      const el = this._getTileEl(t.col, t.row);
+      if (el) { el.style.setProperty('--cb-delay', `${i * 90}ms`); el.classList.add('ptero-impact'); }
+    }
+
+    this.objectives.addScore(toRemove.length * POINTS_PER_TILE + DOUBLE_PTERO_BONUS);
+    this._updateHUD(); this._bumpScore();
+    await this._wait(380);
+    if (!this.element) return;
+
+    for (const p of toRemove) {
+      const el = this._getTileEl(p.col, p.row);
+      if (el) { el.classList.remove('ptero-impact', 'ptero-launch'); el.classList.add('matched'); }
+    }
+    await this._wait(POP_MS);
+    if (!this.element) return;
+    this.board.removeMatched(this._applyObstacleHits(toRemove));
+    this.board.applyGravity(); this.board.refill(); this._renderBoard();
+    await this._wait(FALL_MS);
+  }
+
+  // ── Priority target finder ────────────────────────
+
+  _findPriorityTarget(excludes = []) {
+    const excSet = new Set(excludes.map(p => `${p.col},${p.row}`));
+    const boxes = [], lianas = [], eggs = [], normals = [];
+    for (let r = 0; r < this.board.rows; r++) {
+      for (let c = 0; c < this.board.cols; c++) {
+        if (excSet.has(`${c},${r}`)) continue;
+        const tile = this.board.getTile(c, r);
+        if (!tile) continue;
+        if      (tile.obstacle?.startsWith('box'))   boxes.push({ col: c, row: r });
+        else if (tile.obstacle?.startsWith('liana'))  lianas.push({ col: c, row: r });
+        else if (tile.obstacle === 'egg')             eggs.push({ col: c, row: r });
+        else if (!tile.booster)                       normals.push({ col: c, row: r });
+      }
+    }
+    const rnd = arr => arr.length ? arr[Math.floor(Math.random() * arr.length)] : null;
+    return rnd(boxes) ?? rnd(lianas) ?? rnd(eggs) ?? rnd(normals) ?? { col: 0, row: 0 };
+  }
+
   _injectDinoCrates() {
     // Fixed cluster pattern: bottom rows (7,6) + middle row (4)
     // Resistances: 1=easy, 2=medium, 3=hard
@@ -1162,12 +1649,28 @@ export class LevelScene {
     }
   }
 
+  _injectLianas() {
+    // Middle zone, some near crates (rows 4,6,7) — avoids existing obstacles
+    const pattern = [
+      { col: 0, row: 3, res: 2 },
+      { col: 3, row: 3, res: 1 },
+      { col: 5, row: 3, res: 2 },
+      { col: 7, row: 3, res: 1 },
+      { col: 2, row: 5, res: 1 },
+      { col: 5, row: 5, res: 2 },
+    ];
+    for (const { col, row, res } of pattern) {
+      const tile = this.board.getTile(col, row);
+      if (tile && !tile.booster && !tile.obstacle) tile.obstacle = `liana-${res}`;
+    }
+  }
+
   _injectBoosterPairs() {
     const pairs = [
       ['bomb', 'bomb'],
       ['bomb', 'rocket-h'],
       ['rocket-h', 'rocket-v'],
-      ['color-bomb', 'color-bomb'],
+      ['ptero', 'bomb'],
       ['ptero', 'ptero'],
     ];
     const used = new Set();

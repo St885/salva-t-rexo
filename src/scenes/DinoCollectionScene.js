@@ -1,7 +1,7 @@
 import { getCollection, saveCollection } from '../utils/dinoStorage.js';
 
 const DINOS = [
-  { key: 'trexo',  icon: '🦕', name: 'T-REXo',       rarity: 'Legendario', rCls: 'rarity--legendary', role: 'Protagonista',  ability: 'Mejora las bombas'           },
+  { key: 'trexo',  icon: '🦖', name: 'T-REXo',       rarity: 'Legendario', rCls: 'rarity--legendary', role: 'Protagonista',  ability: 'Mejora las bombas'           },
   { key: 'trike',  icon: '🦏', name: 'Triceratops',   rarity: 'Raro',       rCls: 'rarity--rare',      role: 'Defensa',       ability: 'Destruye cajas jurásicas'    },
   { key: 'ptero',  icon: '🦅', name: 'Pterodáctilo',  rarity: 'Raro',       rCls: 'rarity--rare',      role: 'Apoyo aéreo',   ability: 'Mejora el booster volador'   },
   { key: 'diplo',  icon: '🦒', name: 'Diplodocus',    rarity: 'Épico',      rCls: 'rarity--epic',      role: 'Resistencia',   ability: '+1 movimiento extra'         },

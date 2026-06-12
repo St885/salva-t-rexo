@@ -2,51 +2,49 @@
 
 const SVG_TREXO = `<svg viewBox="0 0 60 54" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:100%;width:auto;display:block">
 <g class="dep-t-tail">
-  <path d="M8 29 Q3 21 5 13 Q9 8 13 16 Q10 22 10 28" fill="#1e8448"/>
-  <path d="M8 29 Q4 22 6 14 Q9 10 12 17" stroke="#28a85f" stroke-width="4" fill="none" stroke-linecap="round"/>
-  <path d="M9 26 Q5 20 7 14" stroke="#3dc97a" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M15 29 Q10 26 6 22 Q2 17 4 12 Q7 9 10 13 Q12 18 13 26" fill="#1e8448"/>
+  <path d="M14 28 Q8 24 5 20 Q2 15 5 11" stroke="#28a85f" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M13 25 Q7 21 5 16" stroke="#3dc97a" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.55"/>
 </g>
 <g class="dep-t-lr">
-  <path d="M17 40 Q13 48 15 52" stroke="#186a3e" stroke-width="6.5" fill="none" stroke-linecap="round"/>
-  <path d="M13 52 Q10 54 8 53 M15 52 L16 55 M18 52 L21 54" stroke="#186a3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M19 38 Q15 45 16 51" stroke="#186a3e" stroke-width="6.5" fill="none" stroke-linecap="round"/>
+  <path d="M14 51 Q11 54 9 53 M16 51 L17 55 M19 51 L22 54" stroke="#186a3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
 </g>
-<ellipse cx="26" cy="36" rx="14" ry="5" fill="#156636" opacity="0.55"/>
-<ellipse cx="25" cy="30" rx="16" ry="13" fill="#1e8448"/>
-<ellipse cx="24" cy="29" rx="14" ry="11" fill="#28a85f"/>
-<ellipse cx="21" cy="24" rx="9.5" ry="6" fill="#3dc97a" opacity="0.65"/>
-<ellipse cx="19" cy="22" rx="5.5" ry="3.2" fill="rgba(130,255,165,0.28)"/>
-<path d="M11 22 Q13.5 14 16 22" fill="#48e88a" stroke="#2aab60" stroke-width="0.6"/>
-<path d="M17 18 Q19.5 10 22 18" fill="#48e88a" stroke="#2aab60" stroke-width="0.6"/>
-<path d="M23 16 Q25.5 8 28 16" fill="#48e88a" stroke="#2aab60" stroke-width="0.6"/>
-<path d="M33 27 Q30 33 33 36" stroke="#186a3e" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-<path d="M33 36 L29 39 M33 36 L36 40" stroke="#186a3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<ellipse cx="28" cy="37" rx="13" ry="4" fill="#156636" opacity="0.45"/>
+<ellipse cx="27" cy="30" rx="15" ry="11" fill="#1e8448"/>
+<ellipse cx="26" cy="29" rx="13" ry="9.5" fill="#28a85f"/>
+<ellipse cx="23" cy="23" rx="8.5" ry="5" fill="#3dc97a" opacity="0.52"/>
+<ellipse cx="21" cy="22" rx="4.8" ry="2.8" fill="rgba(130,255,165,0.26)"/>
+<path d="M34 27 Q31 33 33 37" stroke="#186a3e" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M33 37 L29 38 M33 37 L36 40" stroke="#186a3e" stroke-width="2" fill="none" stroke-linecap="round"/>
 <g class="dep-t-lf">
-  <path d="M24 40 Q27 46 32 49" stroke="#1d8048" stroke-width="7" fill="none" stroke-linecap="round"/>
-  <path d="M30 49 Q27 52 25 51 M32 49 L33 53 M35 49 L38 52" stroke="#186a3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M25 39 Q28 46 33 49" stroke="#1d8048" stroke-width="7.5" fill="none" stroke-linecap="round"/>
+  <path d="M31 49 Q28 52 26 51 M33 49 L34 53 M36 49 L39 52" stroke="#186a3e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
 </g>
 <g class="dep-t-head">
-  <path d="M34 24 Q39 16 43 13" stroke="#1e8448" stroke-width="13" fill="none" stroke-linecap="round"/>
-  <path d="M34 24 Q39 16 43 13" stroke="#28a85f"  stroke-width="10" fill="none" stroke-linecap="round"/>
-  <path d="M34 24 Q39 16 43 13" stroke="#3dc97a"  stroke-width="6"  fill="none" stroke-linecap="round" opacity="0.55"/>
-  <ellipse cx="47" cy="13.5" rx="11" ry="9.5" fill="#1e8448"/>
-  <ellipse cx="47" cy="12.5" rx="10" ry="8.5"  fill="#28a85f"/>
-  <ellipse cx="44" cy="9.5"  rx="7"  ry="4.2"  fill="#3dc97a" opacity="0.6"/>
-  <ellipse cx="43" cy="8.5"  rx="4"  ry="2.2"  fill="rgba(155,255,185,0.27)"/>
-  <path d="M53 15 Q59 18 57 23 Q52 25 49 22" fill="#1e8448"/>
-  <path d="M53 15 Q58 18 56 22 Q52 24 50 22" fill="#28a85f"/>
-  <ellipse cx="55" cy="16.5" rx="1.3" ry="1" fill="#156636"/>
-  <circle cx="48.5" cy="11"   r="5.8" fill="white"/>
-  <circle cx="48.5" cy="11"   r="5.8" fill="rgba(200,245,220,0.22)"/>
-  <circle cx="50"   cy="11.5" r="4"   fill="#0e2018"/>
-  <circle cx="50"   cy="11.5" r="3"   fill="#152c1e"/>
-  <circle cx="50"   cy="11.5" r="2"   fill="#06100a"/>
-  <circle cx="51.6" cy="9.8"  r="1.6" fill="white"/>
-  <circle cx="49.3" cy="13"   r="0.7" fill="rgba(255,255,255,0.55)"/>
-  <circle cx="48.5" cy="11"   r="5.8" stroke="#156636" stroke-width="0.8" fill="none"/>
-  <path d="M44 6.8 Q48.5 4 52.5 6.8" stroke="#0a160e" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-  <path d="M50 21 Q54 25 58 21.5" stroke="#0a160e" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-  <line x1="52"  y1="21.5" x2="52.3" y2="25"   stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="55"  y1="22"   x2="55.2" y2="25.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M35 22 Q41 14 45 11" stroke="#1e8448" stroke-width="15" fill="none" stroke-linecap="round"/>
+  <path d="M35 22 Q41 14 45 11" stroke="#28a85f"  stroke-width="11" fill="none" stroke-linecap="round"/>
+  <path d="M35 22 Q41 14 45 11" stroke="#3dc97a"  stroke-width="6"  fill="none" stroke-linecap="round" opacity="0.42"/>
+  <ellipse cx="49" cy="11"   rx="12" ry="10"  fill="#1e8448"/>
+  <ellipse cx="48" cy="10"   rx="11" ry="9"   fill="#28a85f"/>
+  <ellipse cx="45" cy="7"    rx="7.5" ry="4.5" fill="#3dc97a" opacity="0.55"/>
+  <ellipse cx="43" cy="6.5"  rx="4.5" ry="2.5" fill="rgba(155,255,185,0.25)"/>
+  <path d="M54 13 Q60 17 58 23 Q54 26 50 22" fill="#1e8448"/>
+  <path d="M54 13 Q59 17 57 22 Q53 24 51 21" fill="#28a85f"/>
+  <ellipse cx="56" cy="14.5" rx="1.3" ry="0.9" fill="#156636"/>
+  <circle cx="49.5" cy="10"   r="6.2" fill="white"/>
+  <circle cx="49.5" cy="10"   r="6.2" fill="rgba(200,245,220,0.18)"/>
+  <circle cx="51"   cy="10.5" r="4.2" fill="#0e2018"/>
+  <circle cx="51"   cy="10.5" r="3.2" fill="#152c1e"/>
+  <circle cx="51"   cy="10.5" r="2"   fill="#06100a"/>
+  <circle cx="52.6" cy="8.8"  r="1.6" fill="white"/>
+  <circle cx="50"   cy="12"   r="0.7" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="49.5" cy="10"   r="6.2" stroke="#156636" stroke-width="0.8" fill="none"/>
+  <path d="M45 5 Q49.5 2.5 54 5" stroke="#0a160e" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <path d="M51 21 Q55 25 59 21.5" stroke="#0a160e" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <line x1="53"  y1="22"   x2="53.3" y2="26"   stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="56"  y1="23"   x2="56.2" y2="27"   stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="58.5" y1="22.5" x2="58.5" y2="26"  stroke="white" stroke-width="1.5" stroke-linecap="round"/>
 </g>
 </svg>`;
 
@@ -153,7 +151,7 @@ export class DangerEventPanel {
 
   onRocket()    { this._move(+22, '¡Turbo! 🚀',              'booster'); }
   onBomb()      { this._bombWave();        this._move(+15, '¡Ola explosiva! 💥', 'booster'); }
-  onColorBomb() { this._rainbowGlow();     this._move(+18, '¡Energía arcoíris! 🌈', 'booster'); }
+  onColorBomb() { this._rainbowGlow(); this._rainbowSceneFlash(); this._rainbowBoost(); this._move(+18, '¡Energía arcoíris! 🌈', 'booster'); }
   onPtero()     { this._spawnPteroHelper(); this._move(+14, '¡Ayuda aérea! 🦅', 'match'); }
   onMegaCombo() { this._bombWave(); this._flashScene(); this._move(+30, '¡Combo salvaje! 🔥', 'booster'); }
 
@@ -282,6 +280,24 @@ export class DangerEventPanel {
     void glow.offsetWidth;
     glow.classList.add('dep-glow--active');
     setTimeout(() => glow?.classList.remove('dep-glow--active'), 700);
+  }
+
+  _rainbowSceneFlash() {
+    const overlay = this.element?.querySelector('#dep-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('dep-overlay--rainbow');
+    void overlay.offsetWidth;
+    overlay.classList.add('dep-overlay--rainbow');
+    setTimeout(() => overlay?.classList.remove('dep-overlay--rainbow'), 650);
+  }
+
+  _rainbowBoost() {
+    const trexo = this.element?.querySelector('#dep-trexo');
+    if (!trexo) return;
+    trexo.classList.remove('dep-trexo--rainbow');
+    void trexo.offsetWidth;
+    trexo.classList.add('dep-trexo--rainbow');
+    setTimeout(() => trexo?.classList.remove('dep-trexo--rainbow'), 780);
   }
 
   _spawnPteroHelper() {

@@ -17,7 +17,7 @@ export const GameConfig = {
   gameplay: {
     defaultMoves:     25,
     minMatchLength:   3,
-    levelTimeSeconds: 60,
+    levelTimeSeconds: 78,
   },
 
   debug: {

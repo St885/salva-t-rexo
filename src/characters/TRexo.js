@@ -1,12 +1,15 @@
 const REACTIONS = {
-  start:    { face: '🦕', msgs: ['¡Ayúdame a salir de aquí!'] },
-  match:    { face: '🦕', msgs: ['¡Bien hecho!', '¡Genial!', '¡Eso es!', '¡Más, más!'] },
-  bigMatch: { face: '🦕', msgs: ['¡INCREÍBLE! 🔥', '¡Combo! 🎯', '¡Brillante! ✨'] },
-  noMatch:  { face: '🦕', msgs: ['Hmm…', 'Busca otro…', '¡Hay un match por ahí!'] },
+  start:    { face: '🦖', msgs: ['¡Ayúdame a salir de aquí!'] },
+  match:    { face: '🦖', msgs: ['¡Bien hecho!', '¡Genial!', '¡Eso es!', '¡Más, más!'] },
+  bigMatch: { face: '🦖', msgs: ['¡INCREÍBLE! 🔥', '¡Combo! 🎯', '¡Brillante! ✨'] },
+  noMatch:  { face: '🦖', msgs: ['Hmm…', 'Busca otro…', '¡Hay un match por ahí!'] },
   rocket:    { face: '🚀', msgs: ['¡Boom!', '¡Cohete!', '¡Genial!', '¡Eso fue enorme!'] },
   bomb:      { face: '💥', msgs: ['¡BOOM!', '¡Explosión!', '¡Eso estuvo enorme!', '¡Kaboom!'] },
   megaBomb:   { face: '🔥', msgs: ['¡MEGA BOOM!', '¡Explosión gigante!', '¡Combo bomba!', '¡Eso fue enorme!'] },
-  rocketBomb: { face: '💥', msgs: ['¡Combo brutal!', '¡Mega cohete!', '¡Explosión en cruz!', '¡Eso fue increíble!'] },
+  rocketBomb:  { face: '💥', msgs: ['¡Combo brutal!', '¡Mega cohete!', '¡Explosión en cruz!', '¡Eso fue increíble!'] },
+  dinoCross:   { face: '⚡', msgs: ['¡Cruz Dino!', '¡Fila y columna!', '¡Combo cruzado!', '¡Limpieza total!'] },
+  pteroBomb:   { face: '💥', msgs: ['¡Ataque aéreo!', '¡Bomba voladora!', '¡Objetivo destruido!', '¡Eso fue brutal!'] },
+  doublePtero: { face: '🦅', msgs: ['¡Doble ataque!', '¡Dos voladores!', '¡A por todos!', '¡Combo aéreo!'] },
   colorBomb: { face: '🌈', msgs: ['¡Increíble!', '¡Magia dino! ✨', '¡Eso fue enorme!'] },
   ptero:     { face: '🦅', msgs: ['¡Vuela!', '¡Buen ataque!', '¡Gracias, amigo!'] },
   lowMoves: { face: '😰', msgs: ['¡Pocos movimientos!', '¡Rápido, piensa!', '¡Casi!'] },
@@ -27,7 +30,7 @@ export class TRexo {
     this.element = document.createElement('div');
     this.element.className = 'trexo-strip';
     this.element.innerHTML = `
-      <span class="trexo-face" id="trexo-face">🦕</span>
+      <span class="trexo-face" id="trexo-face">🦖</span>
       <div class="trexo-bubble" id="trexo-bubble">¡Ayúdame a salir de aquí!</div>
     `;
     parent.appendChild(this.element);
