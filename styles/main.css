@@ -746,32 +746,27 @@ body {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  background: rgba(3, 10, 6, 0.86);
-  border-radius: 22px;
-  padding: 9px;
-  /* Double-border trick: inner light rim + outer dark ring */
-  border: 1.5px solid rgba(255, 255, 255, 0.13);
-  outline: 3px solid rgba(0, 0, 0, 0.45);
-  outline-offset: -1px;
+  background: radial-gradient(ellipse at 50% 28%, rgba(28, 74, 64, 0.62) 0%, rgba(14, 44, 38, 0.78) 100%);
+  border-radius: 24px;
+  padding: 10px;
+  border: 1px solid rgba(140, 235, 210, 0.12);
   z-index: 1;
   box-shadow:
-    inset 0 7px 28px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0   rgba(255, 255, 255, 0.11),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.55),
-    0 24px 60px rgba(0, 0, 0, 0.75),
-    0 8px  20px rgba(0, 0, 0, 0.55),
-    0 0    55px rgba(15, 80, 50, 0.22),
-    0 0    12px rgba(15, 80, 50, 0.18);
+    inset 0 2px 12px rgba(0, 24, 20, 0.32),
+    inset 0 1px 0   rgba(150, 240, 216, 0.12),
+    0 18px 44px rgba(0, 0, 0, 0.5),
+    0 6px  16px rgba(0, 0, 0, 0.4),
+    0 0    48px rgba(60, 200, 165, 0.16);
 }
 
 /* ── Tiles ── */
 .tile {
   aspect-ratio: 1;
-  border-radius: 14px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1rem, 5vw, 2rem);
+  font-size: clamp(1.15rem, 5.7vw, 2.3rem);
   cursor: grab;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
@@ -779,56 +774,48 @@ body {
   -webkit-user-select: none;
   position: relative;
   overflow: hidden;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65), 0 0 2px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(160deg, rgba(126,238,210,0.22) 0%, rgba(74,202,176,0.15) 100%);
+  box-shadow: inset 0 0 0 1px rgba(150,240,216,0.12), inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -3px 6px rgba(0,30,26,0.10);
+  /* emoji item floats above the soft aquamarine pad */
+  text-shadow: 0 2px 4px rgba(0,0,0,0.45), 0 1px 9px rgba(0,0,0,0.3);
   transition: box-shadow 0.12s ease, transform 0.12s ease;
 }
 
-/* Jewel colors — radial gradient gives volume/depth */
-.tile-t0 {
-  background: radial-gradient(ellipse at 32% 22%, #ffb8cc 0%, #f02840 36%, #8a0c1a 80%, #540008 100%);
-  box-shadow: 0 5px 0 #5a0810, 0 3px 16px rgba(224, 40, 64, 0.65), inset 0 1px 0 rgba(255,255,255,0.18);
-}
-.tile-t1 {
-  background: radial-gradient(ellipse at 32% 22%, #fff0a0 0%, #f4bc14 36%, #8e6000 80%, #5c3c00 100%);
-  box-shadow: 0 5px 0 #6e4a00, 0 3px 16px rgba(244, 188, 20, 0.65), inset 0 1px 0 rgba(255,255,255,0.18);
-}
-.tile-t2 {
-  background: radial-gradient(ellipse at 32% 22%, #a0f4cc 0%, #30a868 36%, #124020 80%, #0a2814 100%);
-  box-shadow: 0 5px 0 #0a2e18, 0 3px 16px rgba(48, 168, 104, 0.65), inset 0 1px 0 rgba(255,255,255,0.18);
-}
-.tile-t3 {
-  background: radial-gradient(ellipse at 32% 22%, #a8e4ff 0%, #2890ec 36%, #0a2870 80%, #061848 100%);
-  box-shadow: 0 5px 0 #061c5a, 0 3px 16px rgba(40, 144, 236, 0.65), inset 0 1px 0 rgba(255,255,255,0.18);
-}
-.tile-t4 {
-  background: radial-gradient(ellipse at 32% 22%, #e8b8ff 0%, #8c2ce0 36%, #3a0890 80%, #220060 100%);
-  box-shadow: 0 5px 0 #200868, 0 3px 16px rgba(140, 44, 224, 0.65), inset 0 1px 0 rgba(255,255,255,0.18);
+/* Unified aquamarine pad — every item cell shares the same soft translucent base */
+.tile-t0, .tile-t1, .tile-t2, .tile-t3, .tile-t4 {
+  background:
+    radial-gradient(circle at 50% 26%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 56%),
+    linear-gradient(160deg, rgba(126,238,210,0.22) 0%, rgba(74,202,176,0.15) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(150,240,216,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.26),
+    inset 0 -3px 6px rgba(0,30,26,0.10);
 }
 
-/* Bottom-edge reflection */
+/* Bottom-edge reflection — very subtle */
 .tile::before {
   content: '';
   position: absolute;
-  bottom: 7%;
-  left: 14%;
-  right: 14%;
-  height: 15%;
+  bottom: 8%;
+  left: 18%;
+  right: 18%;
+  height: 12%;
   border-radius: 50%;
-  background: linear-gradient(0deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(0deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
   pointer-events: none;
   z-index: 1;
 }
 
-/* Top gloss specular — brighter and tighter */
+/* Soft top sheen — gentle, not a glossy dome */
 .tile::after {
   content: '';
   position: absolute;
-  top: 4%;
-  left: 10%;
-  right: 10%;
-  height: 42%;
+  top: 8%;
+  left: 18%;
+  right: 18%;
+  height: 26%;
   border-radius: 50%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.08) 55%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.04) 60%, rgba(255,255,255,0) 100%);
   pointer-events: none;
 }
 
@@ -2688,6 +2675,99 @@ body {
 }
 .dep-msg--pop { animation: dep-msg-pop 0.32s ease; }
 
+/* ── Critical-time edge glow on the scene ── */
+.dep-scene.dep-scene--danger-edge {
+  animation: dep-edge-pulse 0.9s ease-in-out infinite;
+}
+@keyframes dep-edge-pulse {
+  0%,100% { box-shadow: inset 0 0 16px 3px rgba(255,60,20,0.35); }
+  50%     { box-shadow: inset 0 0 26px 6px rgba(255,60,20,0.62), inset 0 0 10px rgba(255,160,0,0.5); }
+}
+
+/* ── Shark attack mode: bigger, faster, redder ── */
+.dep-shark-wrap.dep-shark--attack {
+  animation: dep-shark-lunge 0.36s ease-in-out infinite;
+  filter: drop-shadow(0 5px 12px rgba(0,20,80,0.8)) drop-shadow(0 0 22px rgba(255,30,30,0.85));
+}
+.dep-shark-wrap.dep-shark--attack svg { transform: scale(1.12); }
+
+/* ── Shark stunned by rainbow energy: wobble + sparkle ── */
+.dep-shark-wrap.dep-shark--stunned {
+  animation: dep-shark-stun 0.45s ease-in-out 2;
+  filter: drop-shadow(0 5px 12px rgba(0,20,80,0.6)) saturate(0.45) brightness(1.4);
+}
+@keyframes dep-shark-stun {
+  0%,100% { transform: translateY(0)   rotate(0deg);   }
+  25%     { transform: translateY(-3px) rotate(-10deg); }
+  75%     { transform: translateY(-2px) rotate(10deg);  }
+}
+.dep-shark-wrap.dep-shark--stunned::before {
+  content: '✦ ✦ ✦';
+  position: absolute; top: -10px; left: 38%;
+  font-size: 0.58rem; color: #ffe680; letter-spacing: 2px;
+  text-shadow: 0 0 6px rgba(255,220,120,0.9);
+  animation: dep-stun-spin 0.9s linear;
+  pointer-events: none;
+}
+@keyframes dep-stun-spin {
+  0%   { opacity: 0; transform: translateY(4px)  scale(0.6); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-8px) scale(1.1); }
+}
+
+/* ── Speech bubble states ── */
+.dep-msg.dep-msg--urgent {
+  color: #fff;
+  background: rgba(150,20,10,0.55);
+  border-color: rgba(255,120,80,0.55);
+  text-shadow: 0 1px 5px rgba(0,0,0,0.9), 0 0 10px rgba(255,60,20,0.6);
+  animation: dep-msg-urgent 0.5s ease-in-out infinite;
+}
+@keyframes dep-msg-urgent {
+  0%,100% { transform: translateX(-50%) scale(1);    }
+  50%     { transform: translateX(-50%) scale(1.08); }
+}
+.dep-msg.dep-msg--boost {
+  color: #fff8d8;
+  background: rgba(120,80,0,0.5);
+  border-color: rgba(255,210,80,0.6);
+  text-shadow: 0 1px 5px rgba(0,0,0,0.85), 0 0 10px rgba(255,200,60,0.6);
+}
+
+/* ── Soft moving water-surface reflection band ── */
+.dep-reflect {
+  position: absolute;
+  top: 2px; left: -30%;
+  width: 45%; height: 7px;
+  background: linear-gradient(90deg, transparent, rgba(190,235,255,0.32), transparent);
+  filter: blur(2px);
+  pointer-events: none;
+  animation: dep-reflect-drift 5.5s linear infinite;
+}
+@keyframes dep-reflect-drift {
+  0%   { transform: translateX(0)     scaleX(0.8); opacity: 0.3; }
+  50%  { opacity: 0.7; }
+  100% { transform: translateX(320%)  scaleX(1.2); opacity: 0.3; }
+}
+
+/* ── Bubbles trailing the shark ── */
+.dep-shark-bub {
+  position: absolute;
+  bottom: 60%; left: 10%;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9), rgba(170,220,255,0.3));
+  pointer-events: none; opacity: 0;
+  animation: dep-shark-bub-rise 2.6s ease-in infinite;
+}
+.dep-sb1 { left: 6%;  animation-delay: 0s;   }
+.dep-sb2 { left: 14%; width: 3px; height: 3px; animation-delay: 0.9s; }
+.dep-sb3 { left: 2%;  width: 5px; height: 5px; animation-delay: 1.6s; }
+@keyframes dep-shark-bub-rise {
+  0%   { transform: translateY(0)    scale(0.5); opacity: 0; }
+  20%  { opacity: 0.85; }
+  100% { transform: translateY(-26px) scale(1);  opacity: 0; }
+}
+
 /* ── Escape bar ── */
 .dep-bar-wrap {
   height: 6px;
@@ -3052,4 +3132,495 @@ body {
          transform: translateY(-6px)  rotate(-2deg)  scaleX(1.05) scaleY(0.97); }
   100% { filter: drop-shadow(0 5px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 14px rgba(70,220,110,0.3));
          transform: translateY(0)     rotate(0deg)   scaleX(1)    scaleY(1); }
+}
+
+/* =====================================================
+   FX System — generic reusable booster/obstacle effects
+   ===================================================== */
+
+/* Generic particle: flies outward from spawn point */
+.fx-particle {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 22;
+  animation: fx-particle-fly var(--dur, 520ms) ease-out forwards;
+  animation-duration: var(--dur, 520ms);
+}
+@keyframes fx-particle-fly {
+  0%   { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.1); opacity: 0; }
+}
+
+/* Rocket beam — horizontal: golden light across the row */
+.fx-rocket-beam-h {
+  position: absolute;
+  width: var(--span, 400px);
+  height: 6px;
+  border-radius: 3px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 24;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(255,220,80,0.35) 15%,
+    var(--rc, #ffd60a) 50%,
+    rgba(255,220,80,0.35) 85%, transparent 100%
+  );
+  box-shadow: 0 0 14px 5px var(--rc, #ffd60a), 0 0 5px 1px rgba(255,255,200,0.65);
+  animation: fx-beam-h-anim var(--dur, 260ms) ease-out forwards;
+  animation-duration: var(--dur, 260ms);
+}
+@keyframes fx-beam-h-anim {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scaleX(0.05); }
+  18%  { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
+  62%  { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scaleX(1); }
+}
+
+/* Rocket beam — vertical: golden light across the column */
+.fx-rocket-beam-v {
+  position: absolute;
+  width: 6px;
+  height: var(--span, 400px);
+  border-radius: 3px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 24;
+  background: linear-gradient(180deg,
+    transparent 0%, rgba(255,220,80,0.35) 15%,
+    var(--rc, #ffd60a) 50%,
+    rgba(255,220,80,0.35) 85%, transparent 100%
+  );
+  box-shadow: 0 0 14px 5px var(--rc, #ffd60a), 0 0 5px 1px rgba(255,255,200,0.65);
+  animation: fx-beam-v-anim var(--dur, 260ms) ease-out forwards;
+  animation-duration: var(--dur, 260ms);
+}
+@keyframes fx-beam-v-anim {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scaleY(0.05); }
+  18%  { opacity: 1; transform: translate(-50%, -50%) scaleY(1); }
+  62%  { opacity: 1; transform: translate(-50%, -50%) scaleY(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scaleY(1); }
+}
+
+/* Ptero flight: emoji flying from booster tile to target */
+.fx-ptero-flight {
+  position: absolute;
+  font-size: 1.5rem;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 30;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6)) drop-shadow(0 0 8px rgba(120,220,60,0.65));
+  animation: fx-ptero-fly var(--dur, 300ms) ease-in-out forwards;
+  animation-duration: var(--dur, 300ms);
+}
+@keyframes fx-ptero-fly {
+  0%   { transform: translate(-50%, -50%) scale(1.3) rotate(-5deg);  opacity: 1; }
+  30%  { transform: translate(calc(-50% + var(--tx) * 0.35), calc(-50% + var(--ty) * 0.35 - 22px)) scale(1.55) rotate(-24deg); opacity: 1; }
+  68%  { transform: translate(calc(-50% + var(--tx) * 0.78), calc(-50% + var(--ty) * 0.78 - 9px))  scale(1.30) rotate(-12deg); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.65) rotate(0deg); opacity: 0.15; }
+}
+
+/* Tile hit feedback: obstacle damaged but not destroyed */
+.fx-tile-hit {
+  animation: fx-tile-hit-anim 0.28s ease forwards;
+}
+@keyframes fx-tile-hit-anim {
+  0%,100% { transform: translate(0, 0);       filter: brightness(1); }
+  20%      { transform: translate(-4px,-2px); filter: brightness(2.8); }
+  42%      { transform: translate( 4px, 2px); filter: brightness(1.9); }
+  64%      { transform: translate(-3px, 1px); filter: brightness(1.4); }
+  86%      { transform: translate( 2px,-1px); filter: brightness(1.1); }
+}
+
+/* =====================================================
+   FX System — Premium booster / obstacle effects v3
+   ===================================================== */
+
+/* Fire spark: thin streak flying outward */
+.fx-spark {
+  position: absolute;
+  width: 2px;
+  height: 9px;
+  border-radius: 1px;
+  transform-origin: center bottom;
+  pointer-events: none;
+  z-index: 23;
+  animation: fx-spark-fly var(--dur, 400ms) ease-out forwards;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes fx-spark-fly {
+  0%   { transform: translate(-50%,-100%) rotate(var(--sa,0deg)) scale(1.2); opacity: 1; }
+  60%  { transform: translate(calc(-50% + var(--tx)*0.7), calc(-100% + var(--ty)*0.7)) rotate(var(--sa,0deg)) scale(0.8); opacity: 0.8; }
+  100% { transform: translate(calc(-50% + var(--tx)),     calc(-100% + var(--ty)))     rotate(var(--sa,0deg)) scale(0.1); opacity: 0; }
+}
+
+/* Smoke puff: blurry circle rising upward */
+.fx-smoke {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 20;
+  filter: blur(3px);
+  animation: fx-smoke-rise var(--dur, 700ms) ease-out forwards;
+}
+@keyframes fx-smoke-rise {
+  0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 0.65; }
+  40%  { transform: translate(calc(-50% + var(--tx)*0.5), calc(-50% + var(--ty)*0.5)) scale(1);   opacity: 0.42; }
+  100% { transform: translate(calc(-50% + var(--tx)),     calc(-50% + var(--ty)))     scale(1.9); opacity: 0; }
+}
+
+/* Leaf particle: oval, rotates during flight */
+.fx-leaf {
+  position: absolute;
+  width: 11px;
+  height: 6px;
+  border-radius: 50% 0 50% 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 22;
+  animation: fx-leaf-fly var(--dur, 550ms) ease-out forwards;
+}
+@keyframes fx-leaf-fly {
+  0%   { transform: translate(-50%,-50%) rotate(0deg) scale(1.2); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(var(--lrot,180deg)) scale(0.35); opacity: 0; }
+}
+
+/* Orbiter: circles around the color-bomb during charge */
+.fx-orbiter {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 25;
+  box-shadow: 0 0 5px 2px currentColor;
+  animation: fx-orbiter-spin var(--dur, 350ms) linear forwards;
+}
+@keyframes fx-orbiter-spin {
+  0%   { transform: translate(-50%,-50%) rotate(var(--phase,0deg))          translateX(var(--orb-r,30px)) scale(1);   opacity: 1; }
+  80%  { transform: translate(-50%,-50%) rotate(calc(var(--phase,0deg) + 360deg)) translateX(var(--orb-r,30px)) scale(1);   opacity: 1; }
+  100% { transform: translate(-50%,-50%) rotate(calc(var(--phase,0deg) + 420deg)) translateX(var(--orb-r,30px)) scale(0.1); opacity: 0; }
+}
+
+/* Warning ring: pulsing danger ring before bomb detonation */
+.fx-warning-ring {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 19;
+  animation: fx-warning-ring-anim var(--dur, 400ms) ease-out forwards;
+}
+@keyframes fx-warning-ring-anim {
+  0%   { box-shadow: 0 0 0  0px rgba(255,60,0,0.95), 0 0 0  0px rgba(255,120,0,0.7); opacity: 1; }
+  45%  { box-shadow: 0 0 0 18px rgba(255,60,0,0.4),  0 0 0 10px rgba(255,140,0,0.6); opacity: 1; }
+  100% { box-shadow: 0 0 0 40px rgba(255,60,0,0),    0 0 0 28px rgba(255,120,0,0);   opacity: 0; }
+}
+
+/* Multi-ring shockwave */
+.fx-multi-ring {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 18;
+  animation: fx-multi-ring-anim var(--dur, 640ms) cubic-bezier(0,.5,.8,1) forwards;
+}
+@keyframes fx-multi-ring-anim {
+  0%   { box-shadow: 0 0 0  0px var(--mr-color, rgba(255,140,0,1)); opacity: 1; }
+  35%  { box-shadow: 0 0 0 34px rgba(255,120,0,0.36);               opacity: 1; }
+  100% { box-shadow: 0 0 0 88px rgba(255,80,0,0);                   opacity: 0; }
+}
+
+/* Rocket beam — horizontal */
+.fx-rocket-beam-h {
+  position: absolute;
+  width: var(--span, 400px);
+  height: 6px;
+  border-radius: 3px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 24;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,220,80,0.35) 15%, var(--rc,#ffd60a) 50%, rgba(255,220,80,0.35) 85%, transparent 100%);
+  box-shadow: 0 0 14px 5px var(--rc,#ffd60a), 0 0 5px 1px rgba(255,255,200,0.65);
+  animation: fx-beam-h-anim var(--dur, 260ms) ease-out forwards;
+}
+@keyframes fx-beam-h-anim {
+  0%   { opacity:0; transform:translate(-50%,-50%) scaleX(0.05); }
+  18%  { opacity:1; transform:translate(-50%,-50%) scaleX(1); }
+  65%  { opacity:1; transform:translate(-50%,-50%) scaleX(1); }
+  100% { opacity:0; transform:translate(-50%,-50%) scaleX(1); }
+}
+
+/* Rocket beam — vertical */
+.fx-rocket-beam-v {
+  position: absolute;
+  width: 6px;
+  height: var(--span, 400px);
+  border-radius: 3px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 24;
+  background: linear-gradient(180deg, transparent 0%, rgba(255,220,80,0.35) 15%, var(--rc,#ffd60a) 50%, rgba(255,220,80,0.35) 85%, transparent 100%);
+  box-shadow: 0 0 14px 5px var(--rc,#ffd60a), 0 0 5px 1px rgba(255,255,200,0.65);
+  animation: fx-beam-v-anim var(--dur, 260ms) ease-out forwards;
+}
+@keyframes fx-beam-v-anim {
+  0%   { opacity:0; transform:translate(-50%,-50%) scaleY(0.05); }
+  18%  { opacity:1; transform:translate(-50%,-50%) scaleY(1); }
+  65%  { opacity:1; transform:translate(-50%,-50%) scaleY(1); }
+  100% { opacity:0; transform:translate(-50%,-50%) scaleY(1); }
+}
+
+/* Rocket head: moving projectile, 2 directions */
+.fx-rocket-head-h {
+  position: absolute;
+  width: 14px;
+  height: 8px;
+  border-radius: 5px 2px 2px 5px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 26;
+  background: var(--rc, #ffffff);
+  box-shadow: 0 0 10px 4px var(--rc,#ffffff), 0 0 20px 8px rgba(255,200,80,0.45);
+  animation: fx-rocket-head-h-anim var(--dur, 200ms) ease-in forwards;
+}
+@keyframes fx-rocket-head-h-anim {
+  0%   { transform:translate(-50%,-50%) scaleX(0.6); opacity:1; }
+  15%  { transform:translate(-50%,-50%) scaleX(1); opacity:1; }
+  100% { transform:translate(calc(-50% + var(--rdir,1) * 500px),-50%) scaleX(0.4); opacity:0; }
+}
+
+.fx-rocket-head-v {
+  position: absolute;
+  width: 8px;
+  height: 14px;
+  border-radius: 5px 5px 2px 2px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 26;
+  background: var(--rc, #ffffff);
+  box-shadow: 0 0 10px 4px var(--rc,#ffffff), 0 0 20px 8px rgba(255,200,80,0.45);
+  animation: fx-rocket-head-v-anim var(--dur, 200ms) ease-in forwards;
+}
+@keyframes fx-rocket-head-v-anim {
+  0%   { transform:translate(-50%,-50%) scaleY(0.6); opacity:1; }
+  15%  { transform:translate(-50%,-50%) scaleY(1); opacity:1; }
+  100% { transform:translate(-50%, calc(-50% + var(--rdir,1) * 500px)) scaleY(0.4); opacity:0; }
+}
+
+/* Ptero flying emoji */
+.fx-ptero-flight {
+  position: absolute;
+  font-size: 1.5rem;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 30;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6)) drop-shadow(0 0 8px rgba(120,220,60,0.65));
+  animation: fx-ptero-fly var(--dur, 300ms) ease-in-out forwards;
+}
+@keyframes fx-ptero-fly {
+  0%   { transform:translate(-50%,-50%) scale(1.3) rotate(-5deg);  opacity:1; }
+  30%  { transform:translate(calc(-50% + var(--tx)*0.35), calc(-50% + var(--ty)*0.35 - 22px)) scale(1.55) rotate(-24deg); opacity:1; }
+  68%  { transform:translate(calc(-50% + var(--tx)*0.78), calc(-50% + var(--ty)*0.78 - 9px))  scale(1.30) rotate(-12deg); opacity:1; }
+  100% { transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.65) rotate(0deg); opacity:0.15; }
+}
+
+/* Combo flash: full-board glow overlay */
+.fx-combo-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 17;
+  animation: fx-combo-flash-anim var(--dur, 260ms) ease-out forwards;
+}
+@keyframes fx-combo-flash-anim {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Objective icon flying to HUD counter */
+.fx-objective-fly {
+  position: fixed;
+  font-size: 1.05rem;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  animation: fx-obj-fly var(--dur, 480ms) cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+}
+@keyframes fx-obj-fly {
+  0%   { transform:translate(-50%,-50%) scale(1.3); opacity:1; }
+  30%  { transform:translate(calc(-50% + var(--tx)*0.3), calc(-50% + var(--ty)*0.3)) scale(1);   opacity:1; }
+  80%  { transform:translate(calc(-50% + var(--tx)*0.9), calc(-50% + var(--ty)*0.9)) scale(0.6); opacity:0.85; }
+  100% { transform:translate(calc(-50% + var(--tx)),     calc(-50% + var(--ty)))     scale(0.2); opacity:0; }
+}
+
+/* HUD counter bounce when objective collected */
+.fx-hud-bounce {
+  animation: fx-hud-bounce-anim 0.38s cubic-bezier(0.36,0.07,0.19,0.97) forwards;
+}
+@keyframes fx-hud-bounce-anim {
+  0%,100% { transform:scale(1);    }
+  28%      { transform:scale(1.38); filter:brightness(2.0); }
+  52%      { transform:scale(0.88); }
+  76%      { transform:scale(1.14); }
+}
+
+/* =====================================================
+   FX System v4 — premium layers (additive, visible)
+   ===================================================== */
+
+/* Brighter, glowing particles — instant premium read on every burst */
+.fx-particle { box-shadow: 0 0 7px 1px currentColor; }
+.fx-spark    { box-shadow: 0 0 5px 1px currentColor; }
+
+/* Central impact bloom: white-hot core expanding into theme colour */
+.fx-flash {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 27;
+  background: radial-gradient(circle, #ffffff 0%, var(--fc,#ffd60a) 42%, rgba(255,255,255,0) 72%);
+  animation: fx-flash-anim var(--dur, 360ms) ease-out forwards;
+}
+@keyframes fx-flash-anim {
+  0%   { opacity: 0;   transform: translate(-50%,-50%) scale(0.2); }
+  22%  { opacity: 1;   transform: translate(-50%,-50%) scale(2.6); }
+  100% { opacity: 0;   transform: translate(-50%,-50%) scale(5.6); }
+}
+
+/* Big rotating multicolour charge aura (rainbow build-up) */
+.fx-aura {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 16;
+  background: conic-gradient(from 0deg,
+    #ff4455,#ff8800,#ffdd00,#44ff88,#44aaff,#aa44ff,#ff44cc,#ff4455);
+  filter: blur(6px);
+  animation: fx-aura-anim var(--dur, 440ms) ease-in-out forwards;
+}
+@keyframes fx-aura-anim {
+  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(0.3) rotate(0deg); }
+  42%  { opacity: 0.9;  transform: translate(-50%,-50%) scale(2.5) rotate(180deg); }
+  100% { opacity: 0;    transform: translate(-50%,-50%) scale(3.8) rotate(360deg); }
+}
+
+/* Pre-vanish target highlight: affected pieces flare before they pop */
+.fx-target-glow {
+  position: relative;
+  z-index: 21;
+  animation: fx-target-glow-anim 0.34s ease forwards;
+  animation-delay: var(--g-delay, 0ms);
+}
+@keyframes fx-target-glow-anim {
+  0%   { filter: brightness(1); }
+  45%  { filter: brightness(2.3) drop-shadow(0 0 8px rgba(255,255,255,0.9)); transform: scale(1.16); }
+  100% { filter: brightness(1); transform: scale(1); }
+}
+
+/* Stronger board shake for mega combos (short + punchy) */
+.board-shake-strong { animation: board-shake-strong 0.44s cubic-bezier(.36,.07,.19,.97); }
+@keyframes board-shake-strong {
+  0%,100% { transform: translate(0,0) rotate(0); }
+  10%     { transform: translate(-8px, 4px) rotate(-0.9deg); }
+  26%     { transform: translate( 9px,-5px) rotate( 0.9deg); }
+  44%     { transform: translate(-7px, 3px) rotate(-0.6deg); }
+  62%     { transform: translate( 6px,-3px) rotate( 0.6deg); }
+  80%     { transform: translate(-3px, 1px) rotate(-0.2deg); }
+}
+
+/* Rocket charge: tile vibrates + ignites just before launch */
+.fx-rocket-charge { animation: fx-rocket-charge-anim 0.16s ease; }
+@keyframes fx-rocket-charge-anim {
+  0%   { filter: brightness(1); transform: scale(1); }
+  50%  { filter: brightness(2.2) drop-shadow(0 0 10px #ffd60a); transform: scale(1.18) rotate(-3deg); }
+  100% { filter: brightness(1.3); transform: scale(1) rotate(0); }
+}
+
+/* =====================================================
+   Combo additions: mini-bombs + danger-scene liveliness
+   ===================================================== */
+
+/* Lluvia Explosiva: a normal tile flagged as a temporary mini-bomb */
+.cb-minibomb {
+  position: relative;
+  z-index: 20;
+  animation: cb-minibomb-pulse 0.3s ease-in-out infinite alternate;
+  box-shadow: 0 0 10px 3px rgba(255,150,0,0.85), inset 0 0 8px rgba(255,90,0,0.7);
+  border-radius: 30%;
+}
+@keyframes cb-minibomb-pulse {
+  0%   { filter: brightness(1.1);  transform: scale(1.02); }
+  100% { filter: brightness(1.8);  transform: scale(1.12); }
+}
+
+/* T-REXo speed dash (rocket / speed reactions) */
+.dep-trexo--speed { animation: dep-trexo-speed 0.5s ease; }
+@keyframes dep-trexo-speed {
+  0%   { transform: translateX(0)    scaleX(1); filter: drop-shadow(-6px 0 6px rgba(120,220,255,0)); }
+  35%  { transform: translateX(7px)  scaleX(1.08); filter: drop-shadow(-12px 0 8px rgba(120,220,255,0.7)); }
+  70%  { transform: translateX(3px)  scaleX(1.02); filter: drop-shadow(-8px 0 6px rgba(120,220,255,0.35)); }
+  100% { transform: translateX(0)    scaleX(1); filter: drop-shadow(0 0 0 rgba(120,220,255,0)); }
+}
+
+/* Ambient palm on the shore (pure CSS silhouette, gentle sway) */
+.dep-palm {
+  position: absolute;
+  left: 4%; bottom: 30%;
+  width: 22px; height: 40px;
+  transform-origin: bottom center;
+  animation: dep-palm-sway 4.5s ease-in-out infinite;
+  pointer-events: none; z-index: 4;
+}
+.dep-palm-trunk {
+  position: absolute; left: 9px; bottom: 0;
+  width: 4px; height: 26px; border-radius: 2px;
+  background: linear-gradient(90deg, #6b4a25, #8a6230, #5a3d1e);
+}
+.dep-palm-fronds {
+  position: absolute; left: -2px; top: -2px;
+  width: 26px; height: 18px; border-radius: 50% 50% 50% 50%;
+  background:
+    radial-gradient(circle at 50% 100%, #1e8448 0 38%, transparent 40%),
+    radial-gradient(circle at 12% 70%,  #28a85f 0 30%, transparent 33%),
+    radial-gradient(circle at 88% 70%,  #28a85f 0 30%, transparent 33%);
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+}
+@keyframes dep-palm-sway {
+  0%,100% { transform: rotate(-3deg); }
+  50%     { transform: rotate(3deg); }
+}
+
+/* Ambient rising bubbles in the water */
+.dep-bubble {
+  position: absolute;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.85), rgba(160,220,255,0.25));
+  box-shadow: 0 0 3px rgba(200,240,255,0.5);
+  pointer-events: none; z-index: 6; opacity: 0;
+  animation: dep-bubble-rise 3.4s ease-in infinite;
+}
+.dep-bub1 { left: 22%; --bsz: 5px; animation-delay: 0s;    animation-duration: 3.2s; }
+.dep-bub2 { left: 44%; --bsz: 4px; animation-delay: 1.1s;  animation-duration: 3.8s; }
+.dep-bub3 { left: 67%; --bsz: 6px; animation-delay: 0.6s;  animation-duration: 3.0s; }
+.dep-bub4 { left: 82%; --bsz: 4px; animation-delay: 1.8s;  animation-duration: 4.0s; }
+@keyframes dep-bubble-rise {
+  0%   { bottom: 6%;  opacity: 0;   transform: translateX(0) scale(0.6); }
+  15%  { opacity: 0.9; }
+  60%  { transform: translateX(4px) scale(1); }
+  100% { bottom: 46%; opacity: 0;   transform: translateX(-3px) scale(0.7); }
 }

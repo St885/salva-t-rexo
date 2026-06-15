@@ -146,7 +146,7 @@
   .topbar-center .trexo-bubble { font-size: 0.8rem; max-width: 150px; }
 
   .board-grid { gap: 4px; }
-  .tile { border-radius: 10px; }
+  .tile { border-radius: 14px; }
 }
 
 /* ── Desktop: 1024px+ ── */
@@ -167,8 +167,8 @@
   }
 
   .tile {
-    border-radius: 12px;
-    font-size: 1.6rem;
+    border-radius: 16px;
+    font-size: 1.7rem;
   }
 
   .level-header {
@@ -251,4 +251,10 @@
     font-size: 0.95rem;
     border-radius: 14px 14px 14px 2px;
   }
+}
+
+/* FX v4 — lighten premium layers on small/low-power screens */
+@media (max-width: 767px) {
+  .fx-aura  { filter: blur(4px); }
+  .fx-flash { animation-duration: 300ms; }
 }

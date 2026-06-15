@@ -45,6 +45,12 @@ export class TRexo {
     this._say(r.msgs[Math.floor(Math.random() * r.msgs.length)]);
   }
 
+  // Force an exact phrase (optionally a face) — used by signature booster lines
+  say(msg, face) {
+    if (face) this._setFace(face);
+    this._say(msg);
+  }
+
   _setFace(emoji) {
     if (!this.faceEl) return;
     this.faceEl.textContent = emoji;

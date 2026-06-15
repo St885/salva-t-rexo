@@ -7,6 +7,8 @@ import { GameConfig }          from '../config/gameConfig.js';
 import { DangerEventPanel }    from './DangerEventPanel.js';
 import { addFragment }                    from '../utils/dinoStorage.js';
 import { getInventory, saveInventory, addCoins } from '../utils/storage.js';
+import { FX }           from '../effects/EffectsManager.js';
+import { SoundManager } from '../effects/SoundManager.js';
 
 const POINTS_PER_TILE = 10;
 const TARGET_SCORE    = 1500;
@@ -57,8 +59,9 @@ export class LevelScene {
     this._gameEnded     = false;
 
     this.board.init();
-    if (GameConfig.debug?.startingBoosterPairs) this._injectBoosterPairs();
-    else if (GameConfig.debug?.startingBoosters) this._injectStartingBoosters();
+    if (GameConfig.debug?.DEBUG_TEST_ALL_BOOSTERS)  this._injectBoosterPairs();
+    else if (GameConfig.debug?.DEBUG_TEST_TWO_BOOSTERS) this._injectTwoBoosters();
+    else if (GameConfig.debug?.startingBoosters)    this._injectStartingBoosters();
     this._injectFossilEggs();
     this._injectDinoCrates();
     this._injectLianas();
@@ -72,6 +75,8 @@ export class LevelScene {
     this.trexo.createIn(this.element.querySelector('#trexo-container'));
     this.dangerPanel = new DangerEventPanel();
     this.dangerPanel.createIn(this.element.querySelector('#dep-container'));
+    if (GameConfig.debug?.DEBUG_DANGER_SCENE)
+      setTimeout(() => this.dangerPanel?.debugState?.(GameConfig.debug.DEBUG_DANGER_STATE), 500);
 
     this._boundMouseMove = (e) => this._onDragMove(e);
     this._boundMouseUp   = (e) => this._onDragEnd(e);
@@ -437,16 +442,31 @@ export class LevelScene {
       : Array.from({ length: this.board.rows }, (_, r) => ({ col, row: r }));
 
     this.trexo?.react('rocket');
+    this.trexo?.say('¡Velocidad Rex!', '🚀');
     this.dangerPanel?.onRocket();
+    { const e = this._getTileEl(col, row);
+      if (e) { e.classList.add('fx-rocket-charge'); setTimeout(() => e.classList.remove('fx-rocket-charge'), 180); } }
     this._getTileEl(col, row)?.classList.add('rocket-launch');
     await this._wait(160);
     if (!this.element) return;
 
+    { const g = this._gridEl(), e = this._getTileEl(col, row);
+      if (g && e) {
+        FX.rocketBeam(g, e, isH); FX.rocketHead(g, e, isH);
+        const hR = g.getBoundingClientRect(), eR = e.getBoundingClientRect();
+        const cx = eR.left + eR.width/2 - hR.left, cy = eR.top + eR.height/2 - hR.top;
+        FX.flash(g, cx, cy, { color: '#ffe680', dur: 300, size: 1.1 });
+        FX.sparks(g, cx, cy, { count: 7 });
+      } }
+    SoundManager.rocketLaunch();
+
+    SoundManager.rocketSweep();
     const STAGGER = 16;
     for (let i = 0; i < affected.length; i++) {
       const el = this._getTileEl(affected[i].col, affected[i].row);
       if (el) { el.style.setProperty('--sweep-delay', `${i * STAGGER}ms`); el.classList.add('rocket-sweep'); }
     }
+    FX.glowTiles(affected.map(p => this._getTileEl(p.col, p.row)), { stagger: STAGGER });
     this.objectives.addScore(affected.length * POINTS_PER_TILE + ROCKET_BONUS);
     this._updateHUD();
     this._bumpScore();
@@ -483,10 +503,15 @@ export class LevelScene {
     }
 
     this.trexo?.react('bomb');
+    this.trexo?.say('¡Boom jurásico!', '💥');
     this.dangerPanel?.onBomb();
 
     // Phase 1 — buildup: bomb grows with intensifying glow
     this._getTileEl(col, row)?.classList.add('bomb-launch');
+    SoundManager.bombCharge();
+    { const g = this._gridEl(), e = this._getTileEl(col, row);
+      if (g && e) { const hR = g.getBoundingClientRect(), eR = e.getBoundingClientRect();
+        FX.warningRing(g, eR.left+eR.width/2-hR.left, eR.top+eR.height/2-hR.top, { dur: 220 }); } }
     await this._wait(220);
     if (!this.element) return;
 
@@ -508,8 +533,18 @@ export class LevelScene {
         wave.style.top  = `${bRect.top  + bRect.height / 2 - gRect.top}px`;
         gridEl.appendChild(wave);
         setTimeout(() => wave.remove(), 680);
+        const bx = bRect.left + bRect.width  / 2 - gRect.left;
+        const by = bRect.top  + bRect.height / 2 - gRect.top;
+        SoundManager.bombBlast();
+        FX.flash(gridEl, bx, by, { color: '#ff9900', dur: 340, size: 1.3 });
+        FX.burst(gridEl, bx, by, { count: 10, colors: FX.C_BOMB, minR: 18, maxR: 44, dur: 480 });
+        FX.multiRing(gridEl, bx, by, { rings: 2 });
+        FX.sparks(gridEl, bx, by, { count: 8 });
+        FX.smoke(gridEl, bx, by, { count: 5 });
+        FX.comboFlash(gridEl, { color: 'rgba(255,140,0,0.40)', dur: 200 });
       }
 
+      FX.glowTiles(affected.map(p => this._getTileEl(p.col, p.row)), { stagger: 14 });
       gridEl.classList.add('board-shake');
       setTimeout(() => gridEl.classList.remove('board-shake'), 380);
     }
@@ -573,8 +608,19 @@ export class LevelScene {
     const toRemove = [{ col, row }];
     if (candidates.length > 0) {
       const target   = candidates[Math.floor(Math.random() * candidates.length)];
+      const gridEl   = this._gridEl();
+      const fromEl   = this._getTileEl(col, row);
       const targetEl = this._getTileEl(target.col, target.row);
-      if (targetEl) targetEl.classList.add('ptero-impact');
+      if (gridEl && fromEl && targetEl) FX.pteroFlight(gridEl, fromEl, targetEl, { dur: 240 });
+      SoundManager.pteroLaunch();
+      await this._wait(200);
+      if (!this.element) return;
+      if (targetEl) {
+        targetEl.classList.add('ptero-impact');
+        SoundManager.pteroImpact();
+        if (gridEl) { const hR = gridEl.getBoundingClientRect(), tR = targetEl.getBoundingClientRect();
+          FX.leaves(gridEl, tR.left+tR.width/2-hR.left, tR.top+tR.height/2-hR.top, { count: 6 }); }
+      }
       toRemove.push(target);
     }
 
@@ -582,7 +628,7 @@ export class LevelScene {
     this._updateHUD();
     this._bumpScore();
 
-    await this._wait(290);
+    await this._wait(190);
     if (!this.element) return;
 
     for (const p of toRemove) {
@@ -605,12 +651,24 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('colorBomb');
+    this.trexo?.say('¡Energía Rex Arcoíris!', '🌈');
     this.dangerPanel?.onColorBomb();
 
     // Phase 1 — Charge: bomb grows and cycles hue before launch
     const cbEl = this._getTileEl(col, row);
     cbEl?.classList.add('color-bomb-charge');
+    SoundManager.rainbowCharge();
+    let _cbOrbiters = [];
+    { const g = this._gridEl();
+      if (g && cbEl) {
+        const hR = g.getBoundingClientRect(), eR = cbEl.getBoundingClientRect();
+        const cx = eR.left + eR.width/2 - hR.left, cy = eR.top + eR.height/2 - hR.top;
+        FX.aura(g, cx, cy, { dur: 420, size: 1.2 });
+        _cbOrbiters = FX.spawnOrbiters(g, cx, cy, { dur: 320, count: 4 });
+      }
+    }
     await this._wait(310);
+    _cbOrbiters.forEach(o => o?.remove());
     if (!this.element) return;
 
     cbEl?.classList.remove('color-bomb-charge');
@@ -638,6 +696,7 @@ export class LevelScene {
     if (!this.element) return;
 
     // Phase 3 — Rays + central flash + board shake + rainbow particles
+    SoundManager.rainbowImpact();
     const gridEl = this.element.querySelector('#board-grid');
     const bombEl = this._getTileEl(col, row);
     if (gridEl && bombEl) {
@@ -675,10 +734,12 @@ export class LevelScene {
       gridEl.appendChild(flash);
       setTimeout(() => flash.remove(), 520);
 
+      FX.flash(gridEl, bx, by, { color: '#ffffff', dur: 440, size: 1.6 });
+      FX.glowTiles(targets.map(p => this._getTileEl(p.col, p.row)), { stagger: 14 });
       gridEl.classList.add('board-shake');
       setTimeout(() => gridEl.classList.remove('board-shake'), 380);
 
-      this._spawnRainbowParticles(gridEl, bx, by);
+      FX.burst(gridEl, bx, by, { count: 10, colors: FX.C_RAINBOW, minR: 28, maxR: 68, dur: 620 });
 
       await this._wait(220);
       rays.forEach(r => r.remove());
@@ -721,23 +782,356 @@ export class LevelScene {
     await this._wait(FALL_MS);
   }
 
-  _spawnRainbowParticles(gridEl, cx, cy) {
-    const RAINBOW = ['#ff4455', '#ff8800', '#ffdd00', '#44ff88', '#44aaff', '#aa44ff', '#ff44cc'];
-    const count   = 10;
-    for (let i = 0; i < count; i++) {
-      const p     = document.createElement('div');
-      p.className = 'cb-particle';
-      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-      const dist  = 28 + Math.random() * 38;
-      p.style.left = `${cx}px`;
-      p.style.top  = `${cy}px`;
-      p.style.background = RAINBOW[i % RAINBOW.length];
-      p.style.setProperty('--tx', `${(Math.cos(angle) * dist).toFixed(1)}px`);
-      p.style.setProperty('--ty', `${(Math.sin(angle) * dist).toFixed(1)}px`);
-      p.style.animationDelay = `${i * 14}ms`;
-      gridEl.appendChild(p);
-      setTimeout(() => p.remove(), 750);
+  // ── Color-bomb + Color-bomb → Poder Jurásico Total ─
+
+  async _fireDoubleColorBomb(col1, row1, col2, row2) {
+    if (!this.element) return;
+    this.trexo?.react('colorBomb');
+    this.trexo?.say('¡Poder jurásico total!', '🌈');
+    this.dangerPanel?.onJurassicTotal?.();
+
+    // Phase 1 — double charge
+    const e1 = this._getTileEl(col1, row1), e2 = this._getTileEl(col2, row2);
+    e1?.classList.add('color-bomb-charge');
+    e2?.classList.add('color-bomb-charge');
+    SoundManager.rainbowCharge();
+    setTimeout(() => SoundManager.rainbowCharge(), 120);
+    const gridEl = this._gridEl();
+    const cx0 = (col1 + col2) / 2, ry0 = (row1 + row2) / 2;
+    { const g = gridEl, mid = this._getTileEl(Math.round(cx0), Math.round(ry0)) || e1;
+      if (g && mid) { const hR = g.getBoundingClientRect(), eR = mid.getBoundingClientRect();
+        FX.aura(g, eR.left+eR.width/2-hR.left, eR.top+eR.height/2-hR.top, { dur: 460, size: 1.8 }); } }
+    await this._wait(340);
+    if (!this.element) return;
+    e1?.classList.remove('color-bomb-charge');
+    e2?.classList.remove('color-bomb-charge');
+
+    // Collect EVERY board cell
+    const all = [];
+    for (let r = 0; r < this.board.rows; r++)
+      for (let c = 0; c < this.board.cols; c++) all.push({ col: c, row: r });
+
+    // Phase 2 — full-board impact: rays + flash + shockwave + shake
+    SoundManager.rainbowImpact();
+    SoundManager.megaCombo();
+    if (gridEl) {
+      const gR = gridEl.getBoundingClientRect();
+      const ref = this._getTileEl(Math.round(cx0), Math.round(ry0)) || e1;
+      const bR = (ref || e1)?.getBoundingClientRect() || gR;
+      const bx = bR.left + bR.width / 2 - gR.left, by = bR.top + bR.height / 2 - gR.top;
+      const HUES = [0,30,60,120,180,240,290,320];
+      let ri = 0;
+      for (const p of all) {
+        if (ri >= 24) break;                       // cap rays for perf
+        if ((p.col + p.row) % 2 !== 0) continue;   // every other cell
+        const tEl = this._getTileEl(p.col, p.row);
+        if (!tEl) continue;
+        const tR = tEl.getBoundingClientRect();
+        const tx = tR.left + tR.width/2 - gR.left, ty = tR.top + tR.height/2 - gR.top;
+        const len = Math.hypot(tx-bx, ty-by);
+        const ang = Math.atan2(ty-by, tx-bx) * 180/Math.PI;
+        const ray = document.createElement('div');
+        ray.className = 'cb-ray';
+        ray.style.left = `${bx}px`; ray.style.top = `${by}px`;
+        ray.style.width = `${len}px`; ray.style.transform = `rotate(${ang}deg)`;
+        ray.style.setProperty('--ray-hue', `${HUES[ri % HUES.length]}`);
+        gridEl.appendChild(ray);
+        setTimeout(() => ray.remove(), 360);
+        ri++;
+      }
+      FX.flash(gridEl, bx, by, { color: '#ffffff', dur: 520, size: 2.4 });
+      FX.multiRing(gridEl, bx, by, { rings: 3, color: 'rgba(255,255,255,0.9)', dur: 760 });
+      FX.burst(gridEl, bx, by, { count: 14, colors: FX.C_RAINBOW, minR: 30, maxR: 90, dur: 680 });
+      FX.comboFlash(gridEl, { color: 'rgba(180,140,255,0.5)', dur: 300 });
+      FX.shake(gridEl, 'strong');
     }
+    await this._wait(260);
+    if (!this.element) return;
+
+    // Phase 3 — sequential glow + pop, then clear board + heavy obstacle damage
+    FX.glowTiles(all.map(p => this._getTileEl(p.col, p.row)), { stagger: 6 });
+    this.objectives.addScore(all.length * POINTS_PER_TILE + BOMB_BONUS * 4);
+    this._updateHUD(); this._bumpScore();
+    await this._wait(300);
+    if (!this.element) return;
+    for (const p of all) this._getTileEl(p.col, p.row)?.classList.add('matched');
+    await this._wait(POP_MS);
+    if (!this.element) return;
+
+    // Two damage passes so tougher obstacles also break
+    const keep1     = this._applyObstacleHits(all);
+    const remaining = all.filter(p => this.board.getTile(p.col, p.row)?.obstacle);
+    const keep2     = this._applyObstacleHits(remaining);
+    this.board.removeMatched([...keep1, ...keep2]);
+    this.board.applyGravity();
+    this.board.refill();
+    this._renderBoard();
+    await this._wait(FALL_MS);
+  }
+
+  // ── Color-bomb + Bomb → Lluvia Explosiva Rex ───────
+
+  async _fireColorBombBomb(cbCol, cbRow, bmCol, bmRow) {
+    if (!this.element) return;
+    this.trexo?.react('rocketBomb');
+    this.trexo?.say('¡Lluvia explosiva Rex!', '💥');
+    this.dangerPanel?.onRainbowBomb?.();
+
+    const gridEl = this._gridEl();
+    const cbEl = this._getTileEl(cbCol, cbRow), bmEl = this._getTileEl(bmCol, bmRow);
+
+    // Phase 1 — charge (~300ms): rainbow loads, bomb vibrates
+    cbEl?.classList.add('color-bomb-charge');
+    bmEl?.classList.add('bomb-launch');
+    SoundManager.rainbowCharge();
+    let cbx = 0, cby = 0, gR = null;
+    if (gridEl && cbEl) { gR = gridEl.getBoundingClientRect();
+      const eR = cbEl.getBoundingClientRect();
+      cbx = eR.left + eR.width/2 - gR.left; cby = eR.top + eR.height/2 - gR.top;
+      FX.aura(gridEl, cbx, cby, { dur: 320, size: 1.3 }); }
+    await this._wait(300);
+    if (!this.element) return;
+    cbEl?.classList.remove('color-bomb-charge');
+
+    // Pick scattered normal tiles to become mini-bombs
+    const candidates = [];
+    for (let r = 0; r < this.board.rows; r++)
+      for (let c = 0; c < this.board.cols; c++) {
+        if (c === cbCol && r === cbRow) continue;
+        const t = this.board.getTile(c, r);
+        if (t && !t.booster && !t.obstacle) candidates.push({ col: c, row: r });
+      }
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1)); [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+    const SEEDS = candidates.slice(0, Math.min(6, candidates.length));
+
+    // Phase 2 — conversion (~300ms): rainbow rays connect, tiles flag as mini-bombs
+    if (gridEl && gR) {
+      SEEDS.forEach((p, i) => {
+        const tEl = this._getTileEl(p.col, p.row);
+        if (!tEl) return;
+        const tR = tEl.getBoundingClientRect();
+        const tx = tR.left + tR.width/2 - gR.left, ty = tR.top + tR.height/2 - gR.top;
+        const len = Math.hypot(tx-cbx, ty-cby);
+        const ang = Math.atan2(ty-cby, tx-cbx) * 180/Math.PI;
+        const ray = document.createElement('div');
+        ray.className = 'cb-ray';
+        ray.style.left = `${cbx}px`; ray.style.top = `${cby}px`;
+        ray.style.width = `${len}px`; ray.style.transform = `rotate(${ang}deg)`;
+        ray.style.setProperty('--ray-hue', `${(i * 55) % 360}`);
+        gridEl.appendChild(ray);
+        setTimeout(() => ray.remove(), 320);
+        tEl.classList.add('cb-minibomb');
+      });
+    }
+    await this._wait(300);
+    if (!this.element) return;
+
+    // Phase 3 — sequential explosions (~600-800ms): one mini-bomb per group
+    const affectedSet = new Set([`${cbCol},${cbRow}`, `${bmCol},${bmRow}`]);
+    for (let i = 0; i < SEEDS.length; i++) {
+      if (!this.element) return;
+      const s = SEEDS[i];
+      const sEl = this._getTileEl(s.col, s.row);
+      sEl?.classList.remove('cb-minibomb');
+      for (let dr = -1; dr <= 1; dr++)
+        for (let dc = -1; dc <= 1; dc++) {
+          const c = s.col + dc, r = s.row + dr;
+          if (c >= 0 && c < this.board.cols && r >= 0 && r < this.board.rows) affectedSet.add(`${c},${r}`);
+        }
+      if (gridEl && gR && sEl) {
+        const tR = sEl.getBoundingClientRect();
+        const bx = tR.left + tR.width/2 - gR.left, by = tR.top + tR.height/2 - gR.top;
+        FX.flash(gridEl, bx, by, { color: '#ff9900', dur: 300, size: 1.1 });
+        FX.multiRing(gridEl, bx, by, { rings: 1, color: 'rgba(255,140,0,1)', dur: 460 });
+        FX.burst(gridEl, bx, by, { count: 7, colors: FX.C_BOMB, minR: 14, maxR: 38, dur: 420 });
+        FX.sparks(gridEl, bx, by, { count: 5 });
+      }
+      SoundManager.bombBlast();
+      if (i === 0) FX.shake(gridEl, 'soft');
+      await this._wait(130);
+    }
+    if (gridEl) FX.shake(gridEl, 'strong');
+
+    const affected = [...affectedSet].map(k => { const [c, r] = k.split(',').map(Number); return { col: c, row: r }; });
+    FX.glowTiles(affected.map(p => this._getTileEl(p.col, p.row)), { stagger: 8 });
+    this.objectives.addScore(affected.length * POINTS_PER_TILE + BOMB_BONUS * 3);
+    this._updateHUD(); this._bumpScore();
+    await this._wait(220);
+    if (!this.element) return;
+    for (const p of affected) this._getTileEl(p.col, p.row)?.classList.add('matched');
+    await this._wait(POP_MS);
+    if (!this.element) return;
+
+    this.board.removeMatched(this._applyObstacleHits(affected));
+    this.board.applyGravity();
+    this.board.refill();
+    this._renderBoard();
+    await this._wait(FALL_MS);
+  }
+
+  // ── Color-bomb + Rocket → Lluvia de Cohetes Rex ────
+
+  async _fireColorBombRocket(cbCol, cbRow, rkCol, rkRow) {
+    if (!this.element) return;
+    this.trexo?.react('dinoCross');
+    this.trexo?.say('¡Lluvia de cohetes Rex!', '🚀');
+    this.dangerPanel?.onRainbowRocket?.();
+
+    const gridEl = this._gridEl();
+    const cbEl = this._getTileEl(cbCol, cbRow);
+    cbEl?.classList.add('color-bomb-charge');
+    this._getTileEl(rkCol, rkRow)?.classList.add('rocket-launch');
+    SoundManager.rainbowCharge();
+    let cbx = 0, cby = 0, gR = null;
+    if (gridEl && cbEl) { gR = gridEl.getBoundingClientRect();
+      const eR = cbEl.getBoundingClientRect();
+      cbx = eR.left + eR.width/2 - gR.left; cby = eR.top + eR.height/2 - gR.top;
+      FX.aura(gridEl, cbx, cby, { dur: 320, size: 1.3 }); }
+    await this._wait(300);
+    if (!this.element) return;
+    cbEl?.classList.remove('color-bomb-charge');
+
+    // Pick scattered normal tiles → temporary rockets (alternating H/V)
+    const candidates = [];
+    for (let r = 0; r < this.board.rows; r++)
+      for (let c = 0; c < this.board.cols; c++) {
+        if (c === cbCol && r === cbRow) continue;
+        const t = this.board.getTile(c, r);
+        if (t && !t.booster && !t.obstacle) candidates.push({ col: c, row: r });
+      }
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1)); [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+    const SEEDS = candidates.slice(0, Math.min(8, candidates.length));
+
+    // Conversion: rainbow rays mark seeds as mini-rockets
+    if (gridEl && gR) {
+      SEEDS.forEach((p, i) => {
+        const tEl = this._getTileEl(p.col, p.row);
+        if (!tEl) return;
+        const tR = tEl.getBoundingClientRect();
+        const tx = tR.left + tR.width/2 - gR.left, ty = tR.top + tR.height/2 - gR.top;
+        const len = Math.hypot(tx-cbx, ty-cby);
+        const ang = Math.atan2(ty-cby, tx-cbx) * 180/Math.PI;
+        const ray = document.createElement('div');
+        ray.className = 'cb-ray';
+        ray.style.left = `${cbx}px`; ray.style.top = `${cby}px`;
+        ray.style.width = `${len}px`; ray.style.transform = `rotate(${ang}deg)`;
+        ray.style.setProperty('--ray-hue', `${(i * 47) % 360}`);
+        gridEl.appendChild(ray);
+        setTimeout(() => ray.remove(), 320);
+        tEl.classList.add('cb-minibomb');
+      });
+    }
+    await this._wait(280);
+    if (!this.element) return;
+
+    // Sequential rocket launches — alternate horizontal / vertical
+    const affectedSet = new Set([`${cbCol},${cbRow}`, `${rkCol},${rkRow}`]);
+    for (let i = 0; i < SEEDS.length; i++) {
+      if (!this.element) return;
+      const s = SEEDS[i];
+      const isH = i % 2 === 0;
+      const sEl = this._getTileEl(s.col, s.row);
+      sEl?.classList.remove('cb-minibomb');
+      if (gridEl && sEl) { FX.rocketBeam(gridEl, sEl, isH); FX.rocketHead(gridEl, sEl, isH); }
+      SoundManager.rocketLaunch();
+      if (isH) for (let c = 0; c < this.board.cols; c++) affectedSet.add(`${c},${s.row}`);
+      else     for (let r = 0; r < this.board.rows; r++) affectedSet.add(`${s.col},${r}`);
+      await this._wait(110);
+    }
+    if (gridEl) FX.shake(gridEl, 'strong');
+
+    const affected = [...affectedSet].map(k => { const [c, r] = k.split(',').map(Number); return { col: c, row: r }; });
+    FX.glowTiles(affected.map(p => this._getTileEl(p.col, p.row)), { stagger: 6 });
+    this.objectives.addScore(affected.length * POINTS_PER_TILE + ROCKET_BONUS * 2);
+    this._updateHUD(); this._bumpScore();
+    await this._wait(220);
+    if (!this.element) return;
+    for (const p of affected) this._getTileEl(p.col, p.row)?.classList.add('matched');
+    await this._wait(POP_MS);
+    if (!this.element) return;
+
+    this.board.removeMatched(this._applyObstacleHits(affected));
+    this.board.applyGravity();
+    this.board.refill();
+    this._renderBoard();
+    await this._wait(FALL_MS);
+  }
+
+  // ── Color-bomb + Ptero → Bandada Rex ───────────────
+
+  async _fireColorBombPtero(cbCol, cbRow, ptCol, ptRow) {
+    if (!this.element) return;
+    this.trexo?.react('doublePtero');
+    this.trexo?.say('¡Bandada Rex!', '🦅');
+    this.dangerPanel?.onBandada?.();
+
+    const gridEl = this._gridEl();
+    const cbEl = this._getTileEl(cbCol, cbRow);
+    cbEl?.classList.add('color-bomb-charge');
+    SoundManager.rainbowCharge();
+    if (gridEl && cbEl) { const gR = gridEl.getBoundingClientRect(), eR = cbEl.getBoundingClientRect();
+      FX.aura(gridEl, eR.left+eR.width/2-gR.left, eR.top+eR.height/2-gR.top, { dur: 340, size: 1.4 }); }
+    await this._wait(300);
+    if (!this.element) return;
+    cbEl?.classList.remove('color-bomb-charge');
+
+    // Choose distinct priority targets (box > liana > egg > normal)
+    const FLOCK = 5;
+    const excludes = [{ col: cbCol, row: cbRow }, { col: ptCol, row: ptRow }];
+    const targets = [];
+    for (let i = 0; i < FLOCK; i++) {
+      const t = this._findPriorityTarget(excludes);
+      if (!t) break;
+      targets.push(t);
+      excludes.push(t);
+    }
+
+    // Send a flyer to each target in quick succession
+    const fromEl = this._getTileEl(ptCol, ptRow) || cbEl;
+    SoundManager.pteroLaunch();
+    for (let i = 0; i < targets.length; i++) {
+      if (!this.element) return;
+      const tEl = this._getTileEl(targets[i].col, targets[i].row);
+      if (gridEl && fromEl && tEl) FX.pteroFlight(gridEl, fromEl, tEl, { dur: 300 });
+      await this._wait(90);
+    }
+    await this._wait(220);
+    if (!this.element) return;
+
+    // Impacts: flash + leaves on each target
+    for (const t of targets) {
+      const tEl = this._getTileEl(t.col, t.row);
+      if (tEl) tEl.classList.add('ptero-impact');
+      if (gridEl && tEl) { const gR = gridEl.getBoundingClientRect(), tR = tEl.getBoundingClientRect();
+        const bx = tR.left+tR.width/2-gR.left, by = tR.top+tR.height/2-gR.top;
+        FX.flash(gridEl, bx, by, { color: '#9bff7a', dur: 280, size: 0.9 });
+        FX.leaves(gridEl, bx, by, { count: 6, dur: 420 }); }
+    }
+    SoundManager.pteroImpact();
+    SoundManager.megaCombo();
+    if (gridEl) FX.shake(gridEl, 'soft');
+    await this._wait(220);
+    if (!this.element) return;
+
+    const remove = [{ col: cbCol, row: cbRow }, { col: ptCol, row: ptRow }, ...targets];
+    FX.glowTiles(remove.map(p => this._getTileEl(p.col, p.row)), { stagger: 10 });
+    this.objectives.addScore(remove.length * POINTS_PER_TILE + PTERO_BOMB_BONUS);
+    this._updateHUD(); this._bumpScore();
+    await this._wait(200);
+    if (!this.element) return;
+    for (const p of remove) this._getTileEl(p.col, p.row)?.classList.add('matched');
+    await this._wait(POP_MS);
+    if (!this.element) return;
+
+    this.board.removeMatched(this._applyObstacleHits(remove));
+    this.board.applyGravity();
+    this.board.refill();
+    this._renderBoard();
+    await this._wait(FALL_MS);
   }
 
   // ── Game flow ─────────────────────────────────────
@@ -763,6 +1157,38 @@ export class LevelScene {
 
     const tileA = this.board.getTile(col1, row1);
     const tileB = this.board.getTile(col2, row2);
+
+    // Rainbow combos must be checked BEFORE the generic ptero/booster blocks
+    {
+      const isCbA  = tileA?.booster === 'color-bomb';
+      const isCbB  = tileB?.booster === 'color-bomb';
+      const isRkA  = tileA?.booster === 'rocket-h' || tileA?.booster === 'rocket-v';
+      const isRkB  = tileB?.booster === 'rocket-h' || tileB?.booster === 'rocket-v';
+      const isPtA  = tileA?.booster === 'ptero';
+      const isPtB  = tileB?.booster === 'ptero';
+
+      // Color-bomb + Rocket → Lluvia de Cohetes Rex
+      if ((isCbA && isRkB) || (isRkA && isCbB)) {
+        this.objectives.useMove();
+        const cbCol = isCbA ? col1 : col2, cbRow = isCbA ? row1 : row2;
+        await this._fireColorBombRocket(cbCol, cbRow, isCbA ? col2 : col1, isCbA ? row2 : row1);
+        await this._runCascade(-1, -1);
+        this._updateHUD();
+        if (!this.element) return;
+        this._checkGameOver(); this.busy = false; return;
+      }
+
+      // Color-bomb + Ptero → Bandada Rex
+      if ((isCbA && isPtB) || (isPtA && isCbB)) {
+        this.objectives.useMove();
+        const cbCol = isCbA ? col1 : col2, cbRow = isCbA ? row1 : row2;
+        await this._fireColorBombPtero(cbCol, cbRow, isCbA ? col2 : col1, isCbA ? row2 : row1);
+        await this._runCascade(-1, -1);
+        this._updateHUD();
+        if (!this.element) return;
+        this._checkGameOver(); this.busy = false; return;
+      }
+    }
 
     // Bomb + Bomb combo → mega 5×5 explosion
     if (tileA?.booster === 'bomb' && tileB?.booster === 'bomb') {
@@ -856,6 +1282,38 @@ export class LevelScene {
       this._checkGameOver();
       this.busy = false;
       return;
+    }
+
+    // Color-bomb + Color-bomb → Poder Jurásico Total
+    if (tileA?.booster === 'color-bomb' && tileB?.booster === 'color-bomb') {
+      this.objectives.useMove();
+      await this._fireDoubleColorBomb(col1, row1, col2, row2);
+      await this._runCascade(-1, -1);
+      this._updateHUD();
+      if (!this.element) return;
+      this._checkGameOver();
+      this.busy = false;
+      return;
+    }
+
+    // Color-bomb + Bomb → Lluvia Explosiva Rex
+    {
+      const isCbA   = tileA?.booster === 'color-bomb';
+      const isCbB   = tileB?.booster === 'color-bomb';
+      const isBombA = tileA?.booster === 'bomb';
+      const isBombB = tileB?.booster === 'bomb';
+      if ((isCbA && isBombB) || (isBombA && isCbB)) {
+        this.objectives.useMove();
+        const cbCol = isCbA ? col1 : col2, cbRow = isCbA ? row1 : row2;
+        const bmCol = isCbA ? col2 : col1, bmRow = isCbA ? row2 : row1;
+        await this._fireColorBombBomb(cbCol, cbRow, bmCol, bmRow);
+        await this._runCascade(-1, -1);
+        this._updateHUD();
+        if (!this.element) return;
+        this._checkGameOver();
+        this.busy = false;
+        return;
+      }
     }
 
     // Color-bomb swapped with a normal tile → clear all of that type
@@ -1058,6 +1516,30 @@ export class LevelScene {
         if (['colorBomb','ptero','bomb','rocket'].includes(_r)) this.dangerPanel?.onBooster();
         else this.dangerPanel?.onMatch(); }
 
+      // Obstacle destruction particles + sounds + HUD fly
+      { const g = this._gridEl(); let flyCap = 0;
+        if (g) for (const key of removeSet) {
+          const [c, r] = key.split(',').map(Number);
+          const tile = this.board.getTile(c, r), el = this._getTileEl(c, r);
+          if (!tile || !el) continue;
+          const hR = g.getBoundingClientRect(), eR = el.getBoundingClientRect();
+          const cx = eR.left + eR.width/2 - hR.left, cy = eR.top + eR.height/2 - hR.top;
+          if (tile.obstacle === 'egg') {
+            FX.debris(g, el, { count: 6, colors: FX.C_EGG, dur: 380 });
+            SoundManager.obstacleDestroy();
+            if (flyCap++ < 2) { FX.objectiveFly(el, '\u{1F95A}', 'egg-count'); SoundManager.objectiveFly(); }
+          } else if (tile.obstacle === 'box-1') {
+            FX.debris(g, el, { count: 7, colors: FX.C_DEBRIS, dur: 420 });
+            FX.sparks(g, cx, cy, { count: 5, dur: 340 });
+            SoundManager.obstacleDestroy();
+            if (flyCap++ < 2) { FX.objectiveFly(el, '\u{1F4E6}', 'box-count'); SoundManager.objectiveFly(); }
+          } else if (tile.obstacle === 'liana-1') {
+            FX.leaves(g, cx, cy, { count: 7, dur: 420 });
+            SoundManager.obstacleDestroy();
+            if (flyCap++ < 2) { FX.objectiveFly(el, '\u{1F33F}', 'liana-count'); SoundManager.objectiveFly(); }
+          }
+        }
+      }
       for (const key of removeSet) {
         const [c, r] = key.split(',').map(Number);
         this._getTileEl(c, r)?.classList.add('matched');
@@ -1101,10 +1583,11 @@ export class LevelScene {
           if (tile) tile.booster = 'ptero';
         }
       }
-      // Crack adjacent crates (reduce resistance)
+      // Crack adjacent crates (reduce resistance) + hit feedback
       for (const p of boxDamaged) {
         const tile = this.board.getTile(p.col, p.row);
         if (tile) tile.obstacle = p.newObstacle;
+        FX.tileHit(this._getTileEl(p.col, p.row));
       }
 
       this.board.applyGravity();
@@ -1288,6 +1771,7 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('megaBomb');
+    this.trexo?.say('¡Mega explosión Rex!', '🔥');
     this.dangerPanel?.onMegaCombo();
 
     // Phase 1: both bombs build up
@@ -1308,7 +1792,7 @@ export class LevelScene {
       }
     }
 
-    // Phase 2: big flash + double shockwave + shake
+    // Phase 2: big flash + double shockwave + shake + premium FX
     const gridEl = this.element.querySelector('#board-grid');
     if (gridEl) {
       const flash = document.createElement('div');
@@ -1320,15 +1804,22 @@ export class LevelScene {
       if (refEl) {
         const bRect = refEl.getBoundingClientRect();
         const gRect = gridEl.getBoundingClientRect();
+        const bx = bRect.left + bRect.width / 2 - gRect.left;
+        const by = bRect.top  + bRect.height / 2 - gRect.top;
         const wave  = document.createElement('div');
         wave.className = 'bomb-shockwave double-bomb-shockwave';
-        wave.style.left = `${bRect.left + bRect.width / 2 - gRect.left}px`;
-        wave.style.top  = `${bRect.top  + bRect.height / 2 - gRect.top}px`;
+        wave.style.left = `${bx}px`;
+        wave.style.top  = `${by}px`;
         gridEl.appendChild(wave);
         setTimeout(() => wave.remove(), 950);
+        SoundManager.megaBombBlast();
+        FX.flash(gridEl, bx, by, { color: '#ff7000', dur: 460, size: 2.0 });
+        FX.multiRing(gridEl, bx, by, { rings: 3, color: 'rgba(255,80,0,1)', dur: 700 });
+        FX.sparks(gridEl, bx, by, { count: 12 });
+        FX.smoke(gridEl, bx, by, { count: 7 });
+        FX.comboFlash(gridEl, { color: 'rgba(255,60,0,0.50)', dur: 240 });
       }
-      gridEl.classList.add('board-shake');
-      setTimeout(() => gridEl.classList.remove('board-shake'), 440);
+      FX.shake(gridEl, 'strong');
     }
 
     // Phase 3: tiles burst outward with stagger
@@ -1370,6 +1861,7 @@ export class LevelScene {
     if (!this.element) return;
 
     this.trexo?.react('rocketBomb');
+    this.trexo?.say('¡Mega cohete Rex!', '💥');
     this.dangerPanel?.onMegaCombo();
 
     // Phase 1: both boosters build up
@@ -1398,7 +1890,7 @@ export class LevelScene {
       .map(k => { const [c, r] = k.split(',').map(Number); return { col: c, row: r }; })
       .sort((a, b) => (Math.abs(a.col - cCol) + Math.abs(a.row - cRow)) - (Math.abs(b.col - cCol) + Math.abs(b.row - cRow)));
 
-    // Phase 2: flash + shockwave + shake
+    // Phase 2: flash + shockwave + shake + premium FX
     const gridEl = this.element.querySelector('#board-grid');
     if (gridEl) {
       const flash = document.createElement('div');
@@ -1410,15 +1902,21 @@ export class LevelScene {
       if (refEl) {
         const bRect = refEl.getBoundingClientRect();
         const gRect = gridEl.getBoundingClientRect();
+        const bx = bRect.left + bRect.width  / 2 - gRect.left;
+        const by = bRect.top  + bRect.height / 2 - gRect.top;
         const wave  = document.createElement('div');
         wave.className = 'bomb-shockwave';
-        wave.style.left = `${bRect.left + bRect.width  / 2 - gRect.left}px`;
-        wave.style.top  = `${bRect.top  + bRect.height / 2 - gRect.top}px`;
+        wave.style.left = `${bx}px`;
+        wave.style.top  = `${by}px`;
         gridEl.appendChild(wave);
         setTimeout(() => wave.remove(), 700);
+        SoundManager.megaCombo();
+        FX.flash(gridEl, bx, by, { color: '#ffd24a', dur: 420, size: 1.7 });
+        FX.multiRing(gridEl, bx, by, { rings: 2, color: 'rgba(255,200,0,1)', dur: 580 });
+        FX.sparks(gridEl, bx, by, { count: 12 });
+        FX.comboFlash(gridEl, { color: 'rgba(255,200,80,0.45)', dur: 220 });
       }
-      gridEl.classList.add('board-shake');
-      setTimeout(() => gridEl.classList.remove('board-shake'), 360);
+      FX.shake(gridEl, 'strong');
     }
 
     // Phase 3: radiating cross sweep from center outward
@@ -1453,6 +1951,7 @@ export class LevelScene {
   async _fireDoubleRocket(col1, row1, col2, row2) {
     if (!this.element) return;
     this.trexo?.react('dinoCross');
+    this.trexo?.say('¡Cruz Dino!', '⚡');
     this.dangerPanel?.onMegaCombo();
 
     this._getTileEl(col1, row1)?.classList.add('rocket-launch');
@@ -1479,6 +1978,22 @@ export class LevelScene {
       setTimeout(() => flash.remove(), 220);
       gridEl.classList.add('board-shake');
       setTimeout(() => gridEl.classList.remove('board-shake'), 320);
+
+      const refEl2 = this._getTileEl(cCol, cRow) || this._getTileEl(col1, row1);
+      if (refEl2) {
+        const bRect2 = refEl2.getBoundingClientRect();
+        const gRect2 = gridEl.getBoundingClientRect();
+        const bx2 = bRect2.left + bRect2.width  / 2 - gRect2.left;
+        const by2 = bRect2.top  + bRect2.height / 2 - gRect2.top;
+        SoundManager.rocketCross();
+        FX.rocketBeam(gridEl, refEl2, true);
+        FX.rocketBeam(gridEl, refEl2, false);
+        FX.rocketHead(gridEl, refEl2, true);
+        FX.rocketHead(gridEl, refEl2, false);
+        FX.flash(gridEl, bx2, by2, { color: '#ffe680', dur: 400, size: 1.6 });
+        FX.comboFlash(gridEl, { color: 'rgba(255,230,80,0.40)', dur: 200 });
+        FX.multiRing(gridEl, bx2, by2, { rings: 2, color: 'rgba(255,220,0,1)', dur: 500 });
+      }
     }
 
     const STAGGER = 13;
@@ -1509,6 +2024,7 @@ export class LevelScene {
     this.trexo?.react('pteroBomb');
     this.dangerPanel?.onMegaCombo();
 
+    SoundManager.pteroLaunch();
     this._getTileEl(ptCol, ptRow)?.classList.add('ptero-launch');
     await this._wait(200);
     if (!this.element) return;
@@ -1532,14 +2048,21 @@ export class LevelScene {
     if (gridEl && targetEl) {
       const bRect = targetEl.getBoundingClientRect();
       const gRect = gridEl.getBoundingClientRect();
+      const bx = bRect.left + bRect.width  / 2 - gRect.left;
+      const by = bRect.top  + bRect.height / 2 - gRect.top;
       const wave  = document.createElement('div');
       wave.className = 'bomb-shockwave';
-      wave.style.left = `${bRect.left + bRect.width  / 2 - gRect.left}px`;
-      wave.style.top  = `${bRect.top  + bRect.height / 2 - gRect.top}px`;
+      wave.style.left = `${bx}px`;
+      wave.style.top  = `${by}px`;
       gridEl.appendChild(wave);
       setTimeout(() => wave.remove(), 680);
       gridEl.classList.add('board-shake');
       setTimeout(() => gridEl.classList.remove('board-shake'), 360);
+      SoundManager.megaCombo();
+      FX.pteroFlight(gridEl, this._getTileEl(ptCol, ptRow) ?? targetEl, targetEl);
+      FX.leaves(gridEl, bx, by, { count: 8, dur: 480 });
+      FX.multiRing(gridEl, bx, by, { rings: 2, color: 'rgba(100,200,60,1)', dur: 580 });
+      FX.comboFlash(gridEl, { color: 'rgba(80,200,80,0.35)', dur: 220 });
     }
 
     for (const p of explosion) {
@@ -1583,11 +2106,13 @@ export class LevelScene {
     this.trexo?.react('doublePtero');
     this.dangerPanel?.onMegaCombo();
 
+    SoundManager.pteroLaunch();
     this._getTileEl(col1, row1)?.classList.add('ptero-launch');
     this._getTileEl(col2, row2)?.classList.add('ptero-launch');
     await this._wait(200);
     if (!this.element) return;
 
+    const gridElPt = this.element.querySelector('#board-grid');
     const excludes  = [{ col: col1, row: row1 }, { col: col2, row: row2 }];
     const toRemove  = [...excludes];
     for (let i = 0; i < 3; i++) {
@@ -1595,8 +2120,21 @@ export class LevelScene {
       excludes.push(t);
       toRemove.push(t);
       const el = this._getTileEl(t.col, t.row);
-      if (el) { el.style.setProperty('--cb-delay', `${i * 90}ms`); el.classList.add('ptero-impact'); }
+      if (el) {
+        el.style.setProperty('--cb-delay', `${i * 90}ms`);
+        el.classList.add('ptero-impact');
+        if (gridElPt) {
+          const hR = gridElPt.getBoundingClientRect(), tR = el.getBoundingClientRect();
+          const cx = tR.left + tR.width/2 - hR.left, cy = tR.top + tR.height/2 - hR.top;
+          setTimeout(() => {
+            SoundManager.pteroImpact();
+            FX.leaves(gridElPt, cx, cy, { count: 5, dur: 380 });
+          }, i * 90);
+        }
+      }
     }
+    SoundManager.megaCombo();
+    if (gridElPt) FX.comboFlash(gridElPt, { color: 'rgba(80,200,80,0.35)', dur: 220 });
 
     this.objectives.addScore(toRemove.length * POINTS_PER_TILE + DOUBLE_PTERO_BONUS);
     this._updateHUD(); this._bumpScore();
@@ -1665,14 +2203,16 @@ export class LevelScene {
     }
   }
 
-  _injectBoosterPairs() {
-    const pairs = [
-      ['bomb', 'bomb'],
-      ['bomb', 'rocket-h'],
-      ['rocket-h', 'rocket-v'],
-      ['ptero', 'bomb'],
-      ['ptero', 'ptero'],
-    ];
+  _injectTwoBoosters() {
+    const ALIAS = {
+      rainbow: 'color-bomb', rocket: 'rocket-h', normal: null,
+      // No existe nave espacial: flying/eagle/bird/spaceship/ufo/ship/nave → ptero (único volador real)
+      flying: 'ptero', eagle: 'ptero', bird: 'ptero',
+      spaceship: 'ptero', ufo: 'ptero', ship: 'ptero', nave: 'ptero',
+    };
+    const norm = (b) => (b in ALIAS ? ALIAS[b] : b);
+    const [raw1, raw2] = GameConfig.debug.TEST_BOOSTER_PAIR ?? ['bomb', 'bomb'];
+    const b1 = norm(raw1), b2 = norm(raw2);
     const used = new Set();
     for (let r = 0; r < this.board.rows; r++) {
       for (let c = 0; c < this.board.cols; c++) {
@@ -1680,27 +2220,79 @@ export class LevelScene {
         if (t?.booster || t?.obstacle) used.add(`${c},${r}`);
       }
     }
-    const dirs = [[0,1],[1,0],[0,-1],[-1,0]];
+    let placed = false;
+    for (let r = 0; r < this.board.rows && !placed; r++) {
+      for (let c = 0; c < this.board.cols - 1 && !placed; c++) {
+        if (used.has(`${c},${r}`) || used.has(`${c + 1},${r}`)) continue;
+        const t1 = this.board.getTile(c, r);
+        const t2 = this.board.getTile(c + 1, r);
+        if (!t1 || !t2 || t1.obstacle || t2.obstacle) continue;
+        if (b1) t1.booster = b1;
+        if (b2) t2.booster = b2;
+        placed = true;
+      }
+    }
+    if (this.element) {
+      const badge = document.createElement('div');
+      badge.id = 'debug-badge';
+      badge.textContent = `🧪 Prueba: ${b1 ?? 'normal'} + ${b2 ?? 'normal'}`;
+      badge.style.cssText = 'position:fixed;bottom:6px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.55);color:#ffd60a;font-size:0.68rem;padding:2px 8px;border-radius:10px;pointer-events:none;z-index:999;letter-spacing:.03em';
+      document.body.appendChild(badge);
+    }
+  }
+
+  _injectBoosterPairs() {
+    // All combos to test — pairs placed adjacent horizontally
+    const pairs = [
+      ['bomb',        'bomb'       ],  // 1. mega explosión
+      ['rocket-h',    'rocket-v'   ],  // 2. Cruz Dino
+      ['bomb',        'rocket-h'   ],  // 3. Mega Cohete
+      ['color-bomb',  'rocket-h'   ],  // 4. arcoíris + cohete
+      ['color-bomb',  'bomb'       ],  // 5. arcoíris + bomba
+      ['color-bomb',  'color-bomb' ],  // 6. limpieza total
+      ['ptero',       'bomb'       ],  // 7. Bomba aérea
+      ['ptero',       'ptero'      ],  // 8. Doble ataque
+      ['ptero',       'rocket-h'   ],  // 9. ptero + cohete
+    ];
+    // Note: color-bomb + pieza normal is testable by swapping any placed color-bomb
+    // with an adjacent normal tile (it's always adjacent to one by default).
+
+    const used = new Set();
+    for (let r = 0; r < this.board.rows; r++) {
+      for (let c = 0; c < this.board.cols; c++) {
+        const t = this.board.getTile(c, r);
+        if (t?.booster || t?.obstacle) used.add(`${c},${r}`);
+      }
+    }
     for (const [b1, b2] of pairs) {
       let placed = false, attempts = 0;
-      while (!placed && attempts < 300) {
+      while (!placed && attempts < 400) {
         attempts++;
         const col = Math.floor(Math.random() * this.board.cols);
         const row = Math.floor(Math.random() * this.board.rows);
         if (used.has(`${col},${row}`)) continue;
-        const [dc, dr] = dirs[Math.floor(Math.random() * dirs.length)];
-        const col2 = col + dc, row2 = row + dr;
-        if (col2 < 0 || col2 >= this.board.cols || row2 < 0 || row2 >= this.board.rows) continue;
-        if (used.has(`${col2},${row2}`)) continue;
-        const t1 = this.board.getTile(col, row);
-        const t2 = this.board.getTile(col2, row2);
-        if (!t1 || !t2) continue;
+        // prefer horizontal placement to avoid accidental 3-in-line vertically
+        const col2 = col + 1;
+        if (col2 >= this.board.cols) continue;
+        if (used.has(`${col2},${row}`)) continue;
+        const t1 = this.board.getTile(col,  row);
+        const t2 = this.board.getTile(col2, row);
+        if (!t1 || !t2 || t1.obstacle || t2.obstacle) continue;
         t1.booster = b1;
         t2.booster = b2;
         used.add(`${col},${row}`);
-        used.add(`${col2},${row2}`);
+        used.add(`${col2},${row}`);
         placed = true;
       }
+    }
+
+    // Debug badge
+    if (this.element) {
+      const badge = document.createElement('div');
+      badge.id = 'debug-badge';
+      badge.textContent = '🧪 Modo prueba boosters';
+      badge.style.cssText = 'position:fixed;bottom:6px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.55);color:#ffd60a;font-size:0.68rem;padding:2px 8px;border-radius:10px;pointer-events:none;z-index:999;letter-spacing:.03em';
+      document.body.appendChild(badge);
     }
   }
 
@@ -1767,7 +2359,7 @@ export class LevelScene {
       const pct = this._timeLeft / LEVEL_TIME;
       this.dangerPanel?.onTimePressure(pct);
       if (this._timeLeft <= 10 && this._timeLeft > 0)
-        this.dangerPanel?.setMessage(URGENCY[Math.floor(Math.random() * URGENCY.length)]);
+        this.dangerPanel?.setMessage(URGENCY[Math.floor(Math.random() * URGENCY.length)], 'urgent');
       if (this._timeLeft <= 0) { clearInterval(this._timerInterval); this._onTimeUp(); }
     }, 1000);
   }
@@ -1799,4 +2391,5 @@ export class LevelScene {
   }
 
   _wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+  _gridEl()  { return this.element?.querySelector('#board-grid'); }
 }

@@ -21,7 +21,16 @@ export const GameConfig = {
   },
 
   debug: {
-    startingBoosters:     false,
-    startingBoosterPairs: true,
+    startingBoosters:        false,
+    DEBUG_TEST_ALL_BOOSTERS: false,  // ← true para testear todas las parejas
+    DEBUG_TEST_TWO_BOOSTERS: false,  // ← true para testear una pareja específica
+    // Alias: 'rainbow'/'color-bomb', 'bomb', 'rocket'/'rocket-h', 'rocket-v',
+    //        'ptero'/'flying'/'eagle'/'spaceship'/'ufo' (todos = ptero), 'normal'/null
+    TEST_BOOSTER_PAIR:       ['rainbow', 'rocket-h'],
+
+    // Previsualizar la escena de persecución en un estado fijo (sin jugar)
+    DEBUG_DANGER_SCENE: false,
+    // "normal" | "medium" | "danger" | "rainbow" | "bomb" | "rocket" | "flying" | "combo" | "victory" | "fail"
+    DEBUG_DANGER_STATE: 'danger',
   },
 };

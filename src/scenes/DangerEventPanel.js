@@ -116,8 +116,14 @@ export class DangerEventPanel {
           <div class="dep-wl dep-wl2"></div>
           <div class="dep-wl dep-wl3"></div>
           <div class="dep-wl dep-wl4"></div>
+          <div class="dep-reflect"></div>
         </div>
         <div class="dep-shore"></div>
+        <div class="dep-palm"><span class="dep-palm-trunk"></span><span class="dep-palm-fronds"></span></div>
+        <div class="dep-bubble dep-bub1"></div>
+        <div class="dep-bubble dep-bub2"></div>
+        <div class="dep-bubble dep-bub3"></div>
+        <div class="dep-bubble dep-bub4"></div>
         <div class="dep-foam dep-fa"></div>
         <div class="dep-foam dep-fb"></div>
         <div class="dep-foam dep-fc"></div>
@@ -126,6 +132,9 @@ export class DangerEventPanel {
         <div class="dep-overlay" id="dep-overlay"></div>
         <div class="dep-shark-wrap" id="dep-shark">
           <div class="dep-shark-wake"></div>
+          <span class="dep-shark-bub dep-sb1"></span>
+          <span class="dep-shark-bub dep-sb2"></span>
+          <span class="dep-shark-bub dep-sb3"></span>
           ${SVG_SHARK}
         </div>
         <div class="dep-trexo-wrap" id="dep-trexo">
@@ -149,11 +158,42 @@ export class DangerEventPanel {
   onWin()      { this._moveTo(100, MSGS.win,  'win');  }
   onLose()     { this._moveTo(0,   MSGS.lose, 'lose'); }
 
-  onRocket()    { this._move(+22, '¡Turbo! 🚀',              'booster'); }
-  onBomb()      { this._bombWave();        this._move(+15, '¡Ola explosiva! 💥', 'booster'); }
-  onColorBomb() { this._rainbowGlow(); this._rainbowSceneFlash(); this._rainbowBoost(); this._move(+18, '¡Energía arcoíris! 🌈', 'booster'); }
-  onPtero()     { this._spawnPteroHelper(); this._move(+14, '¡Ayuda aérea! 🦅', 'match'); }
-  onMegaCombo() { this._bombWave(); this._flashScene(); this._move(+30, '¡Combo salvaje! 🔥', 'booster'); }
+  onRocket()    { this._speedTrail(); this._move(+22, '¡Velocidad Rex! 🚀',       'booster'); }
+  onBomb()      { this._bombWave();        this._move(+15, '¡Boom jurásico! 💥',   'booster'); }
+  onColorBomb() { this._rainbowGlow(); this._rainbowSceneFlash(); this._rainbowBoost(); this._stunShark(); this._move(+18, '¡Energía Rex Arcoíris! 🌈', 'booster'); }
+  onPtero()     { this._spawnPteroHelper(); this._move(+14, '¡Ataque aéreo! 🦅',   'match'); }
+  onMegaCombo() { this._bombWave(); this._flashScene(); this._move(+30, '¡Súper combo! 🔥',   'booster'); }
+
+  // Super-combos: rainbow+rainbow and rainbow+bomb
+  onJurassicTotal() {
+    this._rainbowGlow(); this._rainbowSceneFlash(); this._rainbowBoost();
+    this._flashScene(); this._stunShark();
+    this._move(+40, '¡Poder jurásico total! 🌈', 'booster');
+  }
+  onRainbowBomb() {
+    this._rainbowGlow(); this._bombWave(); this._flashScene(); this._speedTrail();
+    this._move(+26, '¡Lluvia explosiva Rex! 💥🌈', 'booster');
+  }
+  onRainbowRocket() {
+    this._rainbowGlow(); this._speedTrail(); this._flashScene();
+    this._move(+28, '¡Lluvia de cohetes Rex! 🚀🌈', 'booster');
+  }
+  onBandada() {
+    this._rainbowGlow(); this._spawnPteroHelper(); this._spawnPteroHelper();
+    this._move(+26, '¡Bandada Rex! 🦅', 'booster');
+  }
+
+  // Safe dispatcher — maps a booster type to its scene reaction
+  reactToBooster(type) {
+    switch (type) {
+      case 'color-bomb': case 'rainbow':           return this.onColorBomb();
+      case 'bomb':                                  return this.onBomb();
+      case 'rocket-h': case 'rocket-v': case 'rocket': return this.onRocket();
+      case 'ptero': case 'flying': case 'eagle':    return this.onPtero();
+      case 'combo': case 'mega':                    return this.onMegaCombo();
+      default:                                      return this.onBooster();
+    }
+  }
 
   onTimePressure(timePct) {
     if (!this.element) return;
@@ -166,18 +206,41 @@ export class DangerEventPanel {
     // Danger overlay follows time pressure
     const overlay = this.element.querySelector('#dep-overlay');
     const scene   = this.element.querySelector('#dep-scene');
+    const shark   = this.element.querySelector('#dep-shark');
     if (!overlay?.classList.contains('dep-overlay--win')) {
       overlay?.classList.toggle('dep-overlay--danger', timePct < 0.30 || this._dist < 30);
       scene?.classList.toggle('dep-scene--tense', timePct < 0.17);
+      // Aggressive shark + red edge glow when time is nearly out
+      const critical = timePct < 0.17 || this._dist < 18;
+      scene?.classList.toggle('dep-scene--danger-edge', critical);
+      shark?.classList.toggle('dep-shark--attack', critical);
     }
   }
 
-  setMessage(msg) { this._setMsg(msg); }
+  // Force the scene into a fixed state for quick visual testing (debug only)
+  debugState(state) {
+    if (!this.element) return;
+    const map = {
+      normal:  () => { this._dist = 42; this._apply(false); this._setMsg('¡El tiburón me sigue!'); },
+      medium:  () => { this._dist = 28; this._apply(false); this.onTimePressure(0.4); this._setMsg('¡Se acerca!', 'urgent'); },
+      danger:  () => { this._dist = 14; this._apply(false); this.onTimePressure(0.1); this._setMsg('¡Corre T-REXo!', 'urgent'); },
+      rainbow: () => this.onColorBomb(),
+      bomb:    () => this.onBomb(),
+      rocket:  () => this.onRocket(),
+      flying:  () => this.onPtero(),
+      combo:   () => this.onMegaCombo(),
+      victory: () => this.onWin(),
+      fail:    () => this.onLose(),
+    };
+    (map[state] || map.normal)();
+  }
+
+  setMessage(msg, state = false) { this._setMsg(msg, state); }
 
   _move(delta, msg, fx) {
     this._dist = Math.max(0, Math.min(100, this._dist + delta));
     this._apply(true, fx);
-    this._setMsg(msg);
+    this._setMsg(msg, fx === 'booster' ? 'boost' : false);
   }
 
   _moveTo(target, msg, state) {
@@ -273,6 +336,25 @@ export class DangerEventPanel {
     setTimeout(() => shark?.classList.remove('dep-shark--wave'), 700);
   }
 
+  // Shark briefly stunned by rainbow energy (wobble + sparkle)
+  _stunShark() {
+    const shark = this.element?.querySelector('#dep-shark');
+    if (!shark) return;
+    shark.classList.add('dep-shark--stunned');
+    setTimeout(() => shark?.classList.remove('dep-shark--stunned'), 900);
+  }
+
+  // Speed reaction: T-REXo dashes with a motion trail (rocket / speed combos)
+  _speedTrail() {
+    const trexo = this.element?.querySelector('#dep-trexo');
+    if (!trexo) return;
+    trexo.classList.remove('dep-trexo--speed');
+    void trexo.offsetWidth;
+    trexo.classList.add('dep-trexo--speed');
+    setTimeout(() => trexo?.classList.remove('dep-trexo--speed'), 520);
+    this._spawnSpeedLines(1.2);
+  }
+
   _rainbowGlow() {
     const glow = this.element?.querySelector('#dep-trexo-glow');
     if (!glow) return;
@@ -317,13 +399,15 @@ export class DangerEventPanel {
     setTimeout(() => overlay?.classList.remove('dep-overlay--flash'), 400);
   }
 
-  _setMsg(msg) {
+  _setMsg(msg, state = false) {
     const el = this.element?.querySelector('#dep-msg');
     if (!el) return;
     el.textContent = msg;
-    el.classList.remove('dep-msg--pop');
+    el.classList.remove('dep-msg--pop', 'dep-msg--urgent', 'dep-msg--boost');
     void el.offsetWidth;
     el.classList.add('dep-msg--pop');
+    if (state === 'urgent') el.classList.add('dep-msg--urgent');
+    else if (state === 'boost') el.classList.add('dep-msg--boost');
     setTimeout(() => el?.classList.remove('dep-msg--pop'), 400);
   }
 
