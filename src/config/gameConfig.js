@@ -1,5 +1,5 @@
 export const GameConfig = {
-  version: '0.0.1',
+  version: '0.1.7',
   name: 'Salva a T-REXo',
 
   board: {
@@ -28,9 +28,15 @@ export const GameConfig = {
     //        'ptero'/'flying'/'eagle'/'spaceship'/'ufo' (todos = ptero), 'normal'/null
     TEST_BOOSTER_PAIR:       ['rainbow', 'rocket-h'],
 
-    // Previsualizar la escena de persecución en un estado fijo (sin jugar)
+    // Previsualizar la micro-cinemática de persecución en un estado fijo (sin jugar)
+    DEBUG_CINEMATIC: false,
+    // "safe" | "warning" | "danger" | "critical" | "rainbow" | "bomb" | "rocket" | "flying" | "combo" | "victory"
+    DEBUG_CINEMATIC_STATE: 'safe',
+    // Forzar el nuevo sistema de VIDEO aunque el estado normal no lo active.
+    // (si no hay archivo de video, igualmente muestra los overlays sobre el fallback)
+    DEBUG_FORCE_VIDEO_CINEMATIC: false,
+    // (alias antiguo, sigue funcionando)
     DEBUG_DANGER_SCENE: false,
-    // "normal" | "medium" | "danger" | "rainbow" | "bomb" | "rocket" | "flying" | "combo" | "victory" | "fail"
     DEBUG_DANGER_STATE: 'danger',
   },
 };

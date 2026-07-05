@@ -5,6 +5,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [0.1.7] — 2026-07-05
+
+- Cinemática de video tiburón/T-REXo con fallback CSS, mejoras visuales de tablero y boosters.
+
+---
+
 ## [0.1.0] — 2026-06-08 — Primera versión jugable
 
 ### Funcionalidades principales

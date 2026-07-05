@@ -2390,13 +2390,18 @@ body {
   flex-shrink: 0;
   overflow: hidden;
   border-radius: 0;
+  position: relative;
+  /* Cinematic vignette / soft letterbox framing */
+  box-shadow:
+    inset 0 9px 18px -9px rgba(0,0,0,0.62),
+    inset 0 -9px 18px -9px rgba(0,0,0,0.55);
 }
 
 /* ── Scene container ── */
 .dep-scene {
   position: relative;
   width: 100%;
-  height: 92px;
+  height: 112px;
   overflow: hidden;
   background: linear-gradient(180deg, #0b2014 0%, #1a4c26 40%, #0c4680 60%, #072446 100%);
   border-radius: 0;
@@ -2561,8 +2566,8 @@ body {
 /* ── Shark (SVG character, pursuer from left) ── */
 .dep-shark-wrap {
   position: absolute;
-  bottom: 12px;
-  height: 44px;
+  bottom: 14px;
+  height: 56px;
   z-index: 3;
   transition: left 0.7s cubic-bezier(0.2, 0, 0.2, 1.15);
   will-change: transform, left;
@@ -2592,8 +2597,8 @@ body {
 /* ── T-REXo (SVG character, escapee to right) ── */
 .dep-trexo-wrap {
   position: absolute;
-  bottom: 14px;
-  height: 48px;
+  bottom: 16px;
+  height: 62px;
   z-index: 4;
   transition: left 0.7s cubic-bezier(0.2, 0, 0.2, 1.15);
   will-change: transform, left;
@@ -2766,6 +2771,40 @@ body {
   0%   { transform: translateY(0)    scale(0.5); opacity: 0; }
   20%  { opacity: 0.85; }
   100% { transform: translateY(-26px) scale(1);  opacity: 0; }
+}
+
+/* ── Cinematic: parallax canopy + timer states + camera shake ── */
+/* Subtle background parallax (widened to avoid edge gaps) */
+.dep-sky::before {
+  left: -8px; right: -8px;
+  animation: dep-canopy-drift 16s ease-in-out infinite;
+}
+@keyframes dep-canopy-drift {
+  0%,100% { transform: translateX(0);    }
+  50%     { transform: translateX(-6px); }
+}
+
+/* Timer-state ambience (inset glow at the waterline edge) */
+.dep-scene.dep-scene--warning  { box-shadow: inset 0 -10px 18px -8px rgba(255,170,40,0.18); }
+.dep-scene.dep-scene--danger   { box-shadow: inset 0 -14px 22px -8px rgba(255,120,20,0.34); }
+.dep-scene.dep-scene--critical {
+  box-shadow: inset 0 -16px 26px -8px rgba(255,50,20,0.50);
+  animation: dep-cam-micro 0.5s ease-in-out infinite;
+}
+@keyframes dep-cam-micro {
+  0%,100% { transform: translate(0,0);        }
+  25%     { transform: translate(-1px,0.5px); }
+  50%     { transform: translate(1px,-0.5px); }
+  75%     { transform: translate(-0.5px,0.5px); }
+}
+
+/* One-shot camera shake on mega combos */
+.dep-scene.dep-scene--cam-shake { animation: dep-cam-shake 0.42s ease; }
+@keyframes dep-cam-shake {
+  0%,100% { transform: translate(0,0);    }
+  20%     { transform: translate(-3px,2px); }
+  45%     { transform: translate(3px,-2px); }
+  70%     { transform: translate(-2px,1px); }
 }
 
 /* ── Escape bar ── */
@@ -3448,22 +3487,36 @@ body {
   100% { opacity: 0; }
 }
 
-/* Objective icon flying to HUD counter */
+/* Objective icon flying (curved arc) to HUD counter — premium */
 .fx-objective-fly {
   position: fixed;
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   line-height: 1;
   pointer-events: none;
   z-index: 9999;
   transform: translate(-50%, -50%);
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-  animation: fx-obj-fly var(--dur, 480ms) cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+  filter: drop-shadow(0 3px 5px rgba(0,0,0,0.45));
+  animation: fx-obj-fly var(--dur, 560ms) cubic-bezier(0.42,0,0.2,1) forwards;
 }
+/* soft glow halo behind the icon (tinted per objective type) */
+.fx-objective-fly::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow, rgba(255,255,255,0.55)) 0%, transparent 70%);
+  z-index: -1;
+}
+.fx-objective-fly--egg  { --glow: rgba(255,236,150,0.75); }
+.fx-objective-fly--box  { --glow: rgba(255,184,112,0.75); }
+.fx-objective-fly--vine { --glow: rgba(122,236,142,0.78); }
+
 @keyframes fx-obj-fly {
-  0%   { transform:translate(-50%,-50%) scale(1.3); opacity:1; }
-  30%  { transform:translate(calc(-50% + var(--tx)*0.3), calc(-50% + var(--ty)*0.3)) scale(1);   opacity:1; }
-  80%  { transform:translate(calc(-50% + var(--tx)*0.9), calc(-50% + var(--ty)*0.9)) scale(0.6); opacity:0.85; }
-  100% { transform:translate(calc(-50% + var(--tx)),     calc(-50% + var(--ty)))     scale(0.2); opacity:0; }
+  0%   { transform:translate(-50%,-50%) scale(0.6); opacity:0; }
+  14%  { transform:translate(-50%,-50%) scale(1.42); opacity:1; }
+  45%  { transform:translate(calc(-50% + var(--tx)*0.45), calc(-50% + var(--ty)*0.45 - 48px)) scale(1.12); opacity:1; }
+  82%  { transform:translate(calc(-50% + var(--tx)*0.9),  calc(-50% + var(--ty)*0.9  - 10px)) scale(0.7);  opacity:0.92; }
+  100% { transform:translate(calc(-50% + var(--tx)),      calc(-50% + var(--ty)))             scale(0.32); opacity:0; }
 }
 
 /* HUD counter bounce when objective collected */
@@ -3472,9 +3525,17 @@ body {
 }
 @keyframes fx-hud-bounce-anim {
   0%,100% { transform:scale(1);    }
-  28%      { transform:scale(1.38); filter:brightness(2.0); }
+  28%      { transform:scale(1.4);  filter:brightness(2.0); }
   52%      { transform:scale(0.88); }
   76%      { transform:scale(1.14); }
+}
+
+/* HUD counter glow pulse on icon arrival */
+.fx-hud-glow { animation: fx-hud-glow-anim 0.52s ease-out; }
+@keyframes fx-hud-glow-anim {
+  0%   { text-shadow:0 0 0 transparent;                       filter:brightness(1);   }
+  35%  { text-shadow:0 0 10px #ffe9a0, 0 0 18px #ffd34d;      filter:brightness(1.55);}
+  100% { text-shadow:0 0 0 transparent;                       filter:brightness(1);   }
 }
 
 /* =====================================================

@@ -75,7 +75,9 @@ export class LevelScene {
     this.trexo.createIn(this.element.querySelector('#trexo-container'));
     this.dangerPanel = new DangerEventPanel();
     this.dangerPanel.createIn(this.element.querySelector('#dep-container'));
-    if (GameConfig.debug?.DEBUG_DANGER_SCENE)
+    if (GameConfig.debug?.DEBUG_CINEMATIC)
+      setTimeout(() => this.dangerPanel?.debugState?.(GameConfig.debug.DEBUG_CINEMATIC_STATE), 500);
+    else if (GameConfig.debug?.DEBUG_DANGER_SCENE)
       setTimeout(() => this.dangerPanel?.debugState?.(GameConfig.debug.DEBUG_DANGER_STATE), 500);
 
     this._boundMouseMove = (e) => this._onDragMove(e);
@@ -1527,16 +1529,16 @@ export class LevelScene {
           if (tile.obstacle === 'egg') {
             FX.debris(g, el, { count: 6, colors: FX.C_EGG, dur: 380 });
             SoundManager.obstacleDestroy();
-            if (flyCap++ < 2) { FX.objectiveFly(el, '\u{1F95A}', 'egg-count'); SoundManager.objectiveFly(); }
+            if (flyCap++ < 2) { FX.objectiveFly(el, '\u{1F95A}', 'egg-count', { type: 'egg' }); SoundManager.objectiveFly(); }
           } else if (tile.obstacle === 'box-1') {
             FX.debris(g, el, { count: 7, colors: FX.C_DEBRIS, dur: 420 });
             FX.sparks(g, cx, cy, { count: 5, dur: 340 });
             SoundManager.obstacleDestroy();
-            if (flyCap++ < 2) { FX.objectiveFly(el, '\u{1F4E6}', 'box-count'); SoundManager.objectiveFly(); }
+            if (flyCap++ < 2) { FX.objectiveFly(el, '\u{1F4E6}', 'box-count', { type: 'box' }); SoundManager.objectiveFly(); }
           } else if (tile.obstacle === 'liana-1') {
             FX.leaves(g, cx, cy, { count: 7, dur: 420 });
             SoundManager.obstacleDestroy();
-            if (flyCap++ < 2) { FX.objectiveFly(el, '\u{1F33F}', 'liana-count'); SoundManager.objectiveFly(); }
+            if (flyCap++ < 2) { FX.objectiveFly(el, '\u{1F33F}', 'liana-count', { type: 'vine' }); SoundManager.objectiveFly(); }
           }
         }
       }

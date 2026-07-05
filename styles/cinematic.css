@@ -1,0 +1,376 @@
+/* =====================================================
+   Shark Escape Cinematic — new layered micro-scene
+   ===================================================== */
+.cine {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: inset 0 9px 18px -9px rgba(0,0,0,0.62), inset 0 -9px 18px -9px rgba(0,0,0,0.55);
+}
+.cine-scene {
+  position: relative;
+  width: 100%;
+  height: 112px;
+  overflow: hidden;
+  background: linear-gradient(180deg,
+    #8fd6f2 0%, #b6e6df 22%, #2a8f5e 34%, #0e6a86 48%, #073a59 100%);
+}
+
+/* ── Background layers (parallax depth) ── */
+.cine-sky {
+  position: absolute; top: 0; left: 0; right: 0; height: 40%;
+  background: linear-gradient(180deg, #8fd6f2 0%, #c4ecdf 70%, rgba(196,236,223,0) 100%);
+  pointer-events: none;
+}
+.cine-sun {
+  position: absolute; top: 8%; right: 14%;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: radial-gradient(circle, #fff6c8 0%, #ffe27a 55%, rgba(255,210,90,0) 75%);
+  filter: blur(0.5px);
+  animation: cine-sun-glow 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes cine-sun-glow { 0%,100%{opacity:.8;transform:scale(1)} 50%{opacity:1;transform:scale(1.12)} }
+.cine-jungle {
+  position: absolute; top: 26%; left: -10px; right: -10px; height: 20%;
+  background: #114a26;
+  clip-path: polygon(0 100%,0 60%,5% 30%,10% 58%,15% 20%,21% 52%,27% 30%,33% 56%,
+    40% 24%,47% 54%,53% 34%,60% 58%,67% 22%,74% 52%,81% 32%,88% 56%,94% 36%,100% 58%,100% 100%);
+  opacity: 0.92;
+  animation: cine-jungle-drift 17s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes cine-jungle-drift { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-7px)} }
+
+/* ── Water ── */
+.cine-water {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 58%;
+  background: linear-gradient(180deg, #128bb0 0%, #0a5c86 50%, #052e4a 100%);
+  overflow: hidden;
+}
+.cine-wave {
+  position: absolute; left: -20%; right: -20%; height: 8px; border-radius: 50%;
+  background: linear-gradient(90deg, transparent, rgba(180,230,255,0.45), transparent);
+  pointer-events: none;
+}
+.cw1 { top: 2px;  animation: cine-water-wave 4.5s ease-in-out infinite; }
+.cw2 { top: 26%;  opacity: 0.6; animation: cine-water-wave 6s ease-in-out infinite reverse; }
+.cw3 { top: 52%;  opacity: 0.4; animation: cine-water-wave 7.5s ease-in-out infinite; }
+@keyframes cine-water-wave { 0%,100%{transform:translateX(0) scaleY(1)} 50%{transform:translateX(16px) scaleY(1.5)} }
+.cine-surface {
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, transparent 6%, rgba(200,240,255,0.8) 40%, rgba(200,240,255,0.8) 60%, transparent 94%);
+  animation: cine-surface-glow 3.4s ease-in-out infinite; pointer-events: none;
+}
+@keyframes cine-surface-glow { 0%,100%{opacity:.55} 50%{opacity:1} }
+.cine-reflection {
+  position: absolute; top: 4px; left: -30%; width: 42%; height: 6px;
+  background: linear-gradient(90deg, transparent, rgba(200,240,255,0.32), transparent);
+  filter: blur(2px); pointer-events: none;
+  animation: cine-reflect-drift 5.5s linear infinite;
+}
+@keyframes cine-reflect-drift { 0%{transform:translateX(0);opacity:.3} 50%{opacity:.7} 100%{transform:translateX(330%);opacity:.3} }
+.cine-foam {
+  position: absolute; bottom: 56%; left: 0; right: 0; height: 4px;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,0.5) 0 6px, transparent 6px 16px);
+  opacity: 0.5; pointer-events: none;
+  animation: cine-foam-drift 3s linear infinite;
+}
+@keyframes cine-foam-drift { 0%{background-position:0 0} 100%{background-position:22px 0} }
+
+/* ── FX host + particles ── */
+.cine-fx { position: absolute; inset: 0; pointer-events: none; z-index: 6; overflow: hidden; }
+.cinematic-bubble-fx {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9), rgba(170,220,255,0.3));
+  opacity: 0; animation: bubbleRise 1.5s ease-in forwards;
+}
+@keyframes bubbleRise {
+  0%{transform:translateY(0) scale(0.5);opacity:0} 20%{opacity:.85}
+  100%{transform:translateY(-32px) scale(1);opacity:0}
+}
+.cinematic-splash {
+  position: absolute; bottom: 44%; width: 26px; height: 14px;
+  transform: translateX(-50%); border-radius: 50% 50% 0 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(220,245,255,0.85), rgba(180,230,255,0) 70%);
+  animation: splashPulse 0.6s ease-out forwards;
+}
+@keyframes splashPulse {
+  0%{transform:translateX(-50%) scale(0.4);opacity:0} 35%{opacity:1;transform:translateX(-50%) scale(1.1)}
+  100%{transform:translateX(-50%) scale(1.5);opacity:0}
+}
+.cinematic-speedline {
+  position: absolute; height: 2px; width: var(--sl-len,22px); border-radius: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9));
+  animation: cine-speed 0.44s ease-out forwards;
+}
+@keyframes cine-speed { 0%{opacity:0;transform:translateX(8px) scaleX(0.4)} 30%{opacity:1} 100%{opacity:0;transform:translateX(-22px) scaleX(1.2)} }
+.cinematic-leaf {
+  position: absolute; top: 18%; font-size: 0.85rem; line-height: 1;
+  animation: cine-leaf 0.9s ease-in forwards;
+}
+@keyframes cine-leaf { 0%{transform:translateY(0) rotate(0);opacity:0} 25%{opacity:1} 100%{transform:translateY(34px) rotate(220deg);opacity:0} }
+
+/* ── Shark ── */
+.cine-shark {
+  position: absolute; bottom: 16px; height: 56px; z-index: 3;
+  transition: left 0.7s cubic-bezier(0.2,0,0.2,1.15);
+  will-change: transform, left;
+  filter: drop-shadow(0 5px 12px rgba(0,20,80,0.7));
+  animation: sharkSwim 2.4s ease-in-out infinite;
+}
+@keyframes sharkSwim {
+  0%,100%{transform:translateY(0) rotate(0)} 25%{transform:translateY(-5px) rotate(-2deg)}
+  50%{transform:translateY(-8px) rotate(0)} 75%{transform:translateY(-4px) rotate(2deg)}
+}
+.cine-shark-wake {
+  position: absolute; left: 100%; top: 56%; width: 30px; height: 4px;
+  background: linear-gradient(270deg, transparent, rgba(190,230,255,0.7));
+  border-radius: 3px 0 0 3px; transform: translateY(-50%);
+  animation: cine-wake 1.1s ease-in-out infinite;
+}
+@keyframes cine-wake { 0%,100%{opacity:.3;width:12px} 50%{opacity:.9;width:42px} }
+.ce-sk-tail { transform-box: fill-box; transform-origin: 90% 50%; animation: sharkTail 0.6s ease-in-out infinite; }
+@keyframes sharkTail { 0%,100%{transform:rotate(-10deg)} 50%{transform:rotate(10deg)} }
+.ce-sk-jaw  { transform-box: fill-box; transform-origin: 20% 40%; animation: sharkJaw 1.4s ease-in-out infinite; }
+@keyframes sharkJaw { 0%,100%{transform:rotate(0)} 50%{transform:rotate(7deg)} }
+.cine-shark.cinematic-shark-attack {
+  animation: sharkAttack 0.42s ease-in-out infinite;
+  filter: drop-shadow(0 5px 12px rgba(0,20,80,0.8)) drop-shadow(0 0 20px rgba(255,40,40,0.8));
+}
+@keyframes sharkAttack {
+  0%,100%{transform:translateY(0) rotate(0) translateX(0)}
+  35%{transform:translateY(-9px) rotate(-6deg) translateX(6px)}
+  70%{transform:translateY(-4px) rotate(-3deg) translateX(4px)}
+}
+.cine-shark.cinematic-shark-stunned {
+  animation: sharkStunned 0.45s ease-in-out 2;
+  filter: drop-shadow(0 5px 12px rgba(0,20,80,0.6)) saturate(0.4) brightness(1.4);
+}
+@keyframes sharkStunned { 0%,100%{transform:translateY(0) rotate(0)} 25%{transform:translateY(-3px) rotate(-12deg)} 75%{transform:translateY(-2px) rotate(12deg)} }
+.cine-shark.cinematic-shark-stunned::before {
+  content: '\2726 \2726 \2726'; position: absolute; top: -8px; left: 36%;
+  font-size: 0.6rem; color: #ffe680; letter-spacing: 2px;
+  text-shadow: 0 0 6px rgba(255,220,120,0.9);
+  animation: cine-stun-spin 0.9s linear; pointer-events: none;
+}
+@keyframes cine-stun-spin { 0%{opacity:0;transform:translateY(4px) scale(0.6)} 30%{opacity:1} 100%{opacity:0;transform:translateY(-8px) scale(1.1)} }
+.cine-shark.cinematic-shark-recoil { animation: sharkRecoil 0.6s ease; }
+@keyframes sharkRecoil { 0%{transform:translateX(0)} 40%{transform:translateX(-14px) rotate(-6deg)} 100%{transform:translateX(0)} }
+
+/* ── T-REXo ── */
+.cine-trexo {
+  position: absolute; bottom: 18px; height: 64px; z-index: 4;
+  transition: left 0.7s cubic-bezier(0.2,0,0.2,1.15);
+  will-change: transform, left;
+  filter: drop-shadow(0 5px 10px rgba(0,0,0,0.55)) drop-shadow(0 0 12px rgba(70,220,120,0.3));
+  animation: trexoRun 0.6s ease-in-out infinite;
+}
+@keyframes trexoRun {
+  0%,100%{transform:translateY(0) rotate(0) scaleY(1)}
+  20%{transform:translateY(-8px) rotate(-4deg) scaleY(1.04)}
+  50%{transform:translateY(-10px) rotate(-4deg) scaleY(1.05)}
+  70%{transform:translateY(-4px) rotate(1deg) scaleY(0.98)}
+}
+.ce-tx-tail { transform-box: fill-box; transform-origin: 95% 50%; animation: trexoTail 0.6s ease-in-out infinite; }
+@keyframes trexoTail { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(10deg)} }
+.ce-tx-legb { transform-box: fill-box; transform-origin: 50% 0%; animation: trexoLeg 0.6s ease-in-out infinite; }
+.ce-tx-legf { transform-box: fill-box; transform-origin: 50% 0%; animation: trexoLeg 0.6s ease-in-out infinite; animation-delay: -0.3s; }
+@keyframes trexoLeg { 0%,100%{transform:rotate(-16deg)} 50%{transform:rotate(20deg)} }
+.ce-tx-arm  { transform-box: fill-box; transform-origin: 0% 0%; animation: trexoArm 0.6s ease-in-out infinite; }
+@keyframes trexoArm { 0%,100%{transform:rotate(-6deg)} 50%{transform:rotate(10deg)} }
+.ce-tx-head { transform-box: fill-box; transform-origin: 20% 80%; animation: trexoHead 0.6s ease-in-out infinite; }
+@keyframes trexoHead { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
+.cine-trexo-trail {
+  position: absolute; right: 100%; top: 60%; width: 30px; height: 4px;
+  background: linear-gradient(90deg, transparent, rgba(185,255,210,0.75));
+  border-radius: 0 3px 3px 0; transform: translateY(-50%);
+  opacity: 0; animation: cine-trail-pulse 1.1s ease-in-out infinite;
+}
+@keyframes cine-trail-pulse { 0%,100%{opacity:0;width:12px} 50%{opacity:.7;width:40px} }
+.cine-trexo-aura {
+  position: absolute; inset: -8px; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: conic-gradient(from 0deg, #ff4455,#ff8800,#ffdd00,#44ff88,#44aaff,#aa44ff,#ff44cc,#ff4455);
+  filter: blur(7px);
+}
+.cine-trexo-aura.cine-aura--on { animation: boostBurst 0.8s ease-out; }
+@keyframes boostBurst { 0%{opacity:0;transform:scale(0.5) rotate(0)} 40%{opacity:0.85;transform:scale(1.1) rotate(180deg)} 100%{opacity:0;transform:scale(1.3) rotate(360deg)} }
+.cine-trexo.cine-trexo--hop   { animation: trexoHop 0.36s ease; }
+@keyframes trexoHop { 0%,100%{transform:translateY(0) scaleY(1)} 40%{transform:translateY(-12px) scaleY(1.08)} }
+.cine-trexo.cine-trexo--boost { animation: trexoBoost 0.52s ease; }
+@keyframes trexoBoost { 0%{transform:translateY(0) scaleX(1)} 25%{transform:translateY(-20px) scaleX(1.16)} 60%{transform:translateY(-6px) scaleX(1.04)} 100%{transform:translateY(0) scaleX(1)} }
+.cine-trexo.cine-trexo--win   { animation: trexoWin 0.9s ease infinite; }
+@keyframes trexoWin { 0%,100%{transform:translateY(0) rotate(0)} 30%{transform:translateY(-16px) rotate(-8deg)} 60%{transform:translateY(-4px) rotate(6deg)} }
+
+/* ── Panic intensifies with danger states ── */
+.cine--danger .cine-trexo   { animation-duration: 0.5s; }
+.cine--critical .cine-trexo { animation-duration: 0.4s; }
+.cine--danger .ce-eye, .cine--critical .ce-eye { transform: scale(1.18); }
+
+/* ── Overlay / flashes ── */
+.cine-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 7; opacity: 0; }
+.cine-overlay.cine-overlay--danger {
+  background: radial-gradient(ellipse at 15% 70%, rgba(255,30,30,0.22) 0%, transparent 55%);
+  opacity: 1; animation: cine-danger-pulse 1.1s ease-in-out infinite;
+}
+@keyframes cine-danger-pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+.cine-overlay.cine-overlay--win {
+  background: radial-gradient(ellipse at 80% 55%, rgba(255,220,40,0.3) 0%, transparent 55%);
+  opacity: 1; animation: cine-danger-pulse 1s ease-in-out infinite;
+}
+.cine-overlay.cine-overlay--flash { background: rgba(255,235,170,0.5); animation: cine-flash 0.42s ease-out forwards; }
+@keyframes cine-flash { 0%{opacity:0} 25%{opacity:1} 100%{opacity:0} }
+.cine-overlay.cine-overlay--rainbow {
+  background: linear-gradient(90deg, rgba(255,60,60,0.3),rgba(255,200,40,0.3),rgba(60,220,120,0.3),rgba(60,160,255,0.3),rgba(180,80,255,0.3));
+  animation: cine-flash 0.7s ease-out forwards;
+}
+
+/* ── Timer-state ambience ── */
+.cine--warning  { box-shadow: inset 0 -10px 18px -8px rgba(255,170,40,0.18); }
+.cine--danger   { box-shadow: inset 0 -14px 22px -8px rgba(255,120,20,0.34); }
+.cine--critical {
+  box-shadow: inset 0 -16px 26px -8px rgba(255,50,20,0.5);
+  animation: cameraChase 0.5s ease-in-out infinite;
+}
+@keyframes cameraChase { 0%,100%{transform:translate(0,0)} 25%{transform:translate(-1px,0.5px)} 50%{transform:translate(1px,-0.5px)} 75%{transform:translate(-0.5px,0.5px)} }
+.cine-scene.cine-cam--soft   { animation: cine-cam-soft 0.38s ease; }
+@keyframes cine-cam-soft { 0%,100%{transform:translate(0,0)} 30%{transform:translate(-2px,1px)} 65%{transform:translate(2px,-1px)} }
+.cine-scene.cine-cam--strong { animation: cine-cam-strong 0.44s ease; }
+@keyframes cine-cam-strong { 0%,100%{transform:translate(0,0)} 20%{transform:translate(-4px,2px)} 45%{transform:translate(4px,-2px)} 70%{transform:translate(-3px,1px)} }
+
+/* ── Speech bubble ── */
+.cinematic-bubble {
+  position: absolute; top: 7px; left: 50%; transform: translateX(-50%);
+  white-space: nowrap; font-size: 0.66rem; font-weight: 800; color: #0c2a1c;
+  background: rgba(255,255,255,0.92); padding: 3px 12px; border-radius: 14px 14px 14px 3px;
+  border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+  z-index: 8; pointer-events: none; letter-spacing: 0.2px;
+}
+.cinematic-bubble.cinematic-bubble-pop { animation: cine-bubble-pop 0.34s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes cine-bubble-pop { 0%{transform:translateX(-50%) scale(0.5);opacity:0} 100%{transform:translateX(-50%) scale(1);opacity:1} }
+.cinematic-bubble.cinematic-bubble-danger {
+  color: #fff; background: rgba(170,25,15,0.92); border-color: rgba(255,120,80,0.6);
+  animation: cine-bubble-urgent 0.5s ease-in-out infinite;
+}
+@keyframes cine-bubble-urgent { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.08)} }
+.cinematic-bubble.cinematic-bubble-boost {
+  color: #3a2400; background: rgba(255,224,130,0.95); border-color: rgba(255,200,60,0.7);
+}
+
+/* ── Escape progress bar ── */
+.cine-bar { height: 6px; background: rgba(0,0,0,0.38); position: relative; overflow: hidden; flex-shrink: 0; }
+.cine-bar-fill {
+  height: 100%; width: 46%;
+  background: linear-gradient(90deg, #e63946 0%, #ffd60a 50%, #74c69d 100%);
+  transition: width 0.7s cubic-bezier(0.2,0,0.2,1); border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 8px rgba(255,214,10,0.45);
+}
+
+/* ── Mobile ── */
+@media (max-width: 767px) {
+  .cine-scene { height: 78px; }
+  .cine-shark { height: 44px; bottom: 10px; }
+  .cine-trexo { height: 50px; bottom: 12px; }
+  .cinematic-bubble { font-size: 0.56rem; top: 4px; padding: 2px 8px; }
+  .cine--critical { animation: none; }
+}
+
+/* =====================================================
+   Shark Escape Video Cinematic — local video + overlays
+   (sits at z5: above background/characters, below cine-fx
+    z6 / overlay z7 / bubble z8, so all existing reactions
+    automatically appear ON TOP of the video)
+   ===================================================== */
+.shark-video-layer {
+  position: absolute; inset: 0; z-index: 5;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.45s ease;
+  overflow: hidden; border-radius: inherit;
+}
+/* Only visible once the video confirms it can play */
+.shark-video-cinematic.has-video .shark-video-layer { opacity: 1; }
+
+.shark-cinematic-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  display: block;
+}
+
+/* Premium ambient overlay — reacts to timer state classes */
+.shark-video-overlay {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background:
+    radial-gradient(130% 80% at 50% -5%, rgba(255,255,255,0.14), transparent 55%),
+    radial-gradient(130% 130% at 50% 120%, rgba(0,22,42,0.55), transparent 62%);
+  transition: box-shadow 0.5s ease, background 0.5s ease;
+}
+.shark-video-overlay.cinematic-warning  { box-shadow: inset 0 0 55px rgba(255,180,60,0.25); }
+.shark-video-overlay.cinematic-danger   { box-shadow: inset 0 0 70px rgba(255,110,40,0.42); }
+.shark-video-overlay.cinematic-critical {
+  box-shadow: inset 0 0 95px rgba(255,40,40,0.55);
+  animation: videoCriticalGlow 0.7s ease-in-out infinite;
+}
+.shark-video-overlay.shark-video-critical-glow,
+.shark-video-overlay.cinematic-critical { /* alias-friendly */ }
+/* Subtle container shake while critical (video included) */
+.shark-video-cinematic.has-video.cine--critical .shark-video-layer {
+  animation: videoCinematicShake 0.42s ease-in-out infinite;
+}
+
+/* Full-panel FX layer over the video */
+.shark-video-fx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 2; overflow: hidden; }
+.shark-video-fx       { position: absolute; inset: 0; pointer-events: none; }
+
+.shark-video-rainbow-fx {
+  background: linear-gradient(120deg,#ff4d4d,#ffb13d,#ffe24d,#5dff8f,#4dc3ff,#b14dff,#ff4dde);
+  background-size: 300% 100%; mix-blend-mode: screen; opacity: 0;
+  animation: videoRainbowPulse 0.82s ease-out;
+}
+.shark-video-bomb-fx {
+  background: radial-gradient(circle at 50% 60%, rgba(255,245,200,0.92), rgba(255,160,60,0.4) 30%, transparent 60%);
+  opacity: 0; animation: videoBombShockwave 0.72s ease-out;
+}
+.shark-video-rocket-fx {
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 13px, rgba(255,255,255,0.42) 13px 16px);
+  opacity: 0; animation: videoRocketSpeedLines 0.62s linear;
+}
+.shark-video-flying-fx {
+  background: radial-gradient(58% 42% at 32% -8%, rgba(18,40,15,0.5), transparent 70%);
+  opacity: 0; animation: videoFlyingShadow 0.82s ease-out;
+}
+.shark-video-combo-fx {
+  background: radial-gradient(circle at 50% 50%, rgba(255,225,120,0.88), transparent 66%);
+  mix-blend-mode: screen; opacity: 0; animation: videoComboFlash 0.72s ease-out;
+}
+
+@keyframes videoCinematicShake {
+  0%,100% { transform: translate(0,0); } 25% { transform: translate(-2px,1px); }
+  50% { transform: translate(2px,-1px); } 75% { transform: translate(-1px,-1px); }
+}
+@keyframes videoCriticalGlow { 0%,100% { opacity: 0.85; } 50% { opacity: 1; } }
+@keyframes videoRainbowPulse {
+  0% { opacity: 0; background-position: 0% 50%; }
+  35% { opacity: 0.55; } 100% { opacity: 0; background-position: 100% 50%; }
+}
+@keyframes videoBombShockwave {
+  0% { opacity: 0; transform: scale(0.4); } 25% { opacity: 0.9; }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+@keyframes videoRocketSpeedLines {
+  0% { opacity: 0; transform: translateX(12%); }
+  30% { opacity: 0.6; } 100% { opacity: 0; transform: translateX(-14%); }
+}
+@keyframes videoFlyingShadow {
+  0% { opacity: 0; transform: translateX(-20%) scale(0.9); }
+  40% { opacity: 0.7; } 100% { opacity: 0; transform: translateX(25%) scale(1.05); }
+}
+@keyframes videoComboFlash {
+  0% { opacity: 0; transform: scale(0.6); } 30% { opacity: 0.95; }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+@keyframes videoMessagePop {
+  0% { transform: scale(0.7); opacity: 0; } 60% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}

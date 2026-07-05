@@ -229,28 +229,38 @@ export class FX {
     this._gc(el, dur + 60);
   }
 
-  // Mini icon flies from tileEl to HUD counter (fixed positioning on body)
-  static objectiveFly(tileEl, icon, hudId, { dur = 480 } = {}) {
+  // Mini icon flies (curved arc) from tileEl to HUD counter; glow+bounce on arrival.
+  // type: 'egg' | 'box' | 'vine' (tints the glow halo). Safe no-op if target missing.
+  static objectiveFly(tileEl, icon, hudId, { dur = 560, type = '' } = {}) {
     const toEl = document.getElementById(hudId);
     if (!tileEl || !toEl) return;
     const fR = tileEl.getBoundingClientRect();
     const tR = toEl.getBoundingClientRect();
     const el = document.createElement('div');
-    el.className = 'fx-objective-fly';
+    el.className = 'fx-objective-fly' + (type ? ` fx-objective-fly--${type}` : '');
     el.textContent = icon;
     el.style.cssText = `left:${fR.left+fR.width/2}px;top:${fR.top+fR.height/2}px;--tx:${(tR.left+tR.width/2-fR.left-fR.width/2).toFixed(0)}px;--ty:${(tR.top+tR.height/2-fR.top-fR.height/2).toFixed(0)}px;animation-duration:${dur}ms`;
     document.body.appendChild(el);
-    this._gc(el, dur + 60);
-    setTimeout(() => this.hudBounce(toEl), dur - 40);
+    this._gc(el, dur + 80);
+    setTimeout(() => { this.hudBounce(toEl); this.hudGlow(toEl); }, dur - 60);
   }
 
-  // HUD counter bounce after objective completes
+  // HUD counter bounce after objective collected
   static hudBounce(el) {
     if (!el) return;
     el.classList.remove('fx-hud-bounce');
     void el.offsetWidth;
     el.classList.add('fx-hud-bounce');
     setTimeout(() => el?.classList.remove('fx-hud-bounce'), 400);
+  }
+
+  // Brief glow pulse on the HUD counter when an icon lands
+  static hudGlow(el) {
+    if (!el) return;
+    el.classList.remove('fx-hud-glow');
+    void el.offsetWidth;
+    el.classList.add('fx-hud-glow');
+    setTimeout(() => el?.classList.remove('fx-hud-glow'), 560);
   }
 
   // ── v4 premium layers ────────────────────────────────────────

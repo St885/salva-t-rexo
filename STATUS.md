@@ -1,8 +1,8 @@
 # STATUS — Salva a T-REXo
 
-**Versión actual:** v0.1.0
-**Estado:** Primera versión jugable lista para despliegue
-**Fecha:** 2026-06-08
+**Versión actual:** v0.1.7 — Cinemática de video tiburón/T-REXo con fallback CSS, mejoras visuales de tablero y boosters
+**Estado:** Versión estable lista para despliegue
+**Fecha:** 2026-07-05
 
 ---
 
