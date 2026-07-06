@@ -2,7 +2,8 @@
 
 **Versión actual:** v0.1.7 — Cinemática de video tiburón/T-REXo con fallback CSS, mejoras visuales de tablero y boosters
 **Estado:** Versión estable lista para despliegue
-**Fecha:** 2026-07-05
+**Fecha:** 2026-07-06
+**Nota:** Proyecto preparado para migración a Mac — ver `docs/MAC_MIGRATION.md`
 
 ---
 
